@@ -6,69 +6,36 @@ import 'quiz_controller.dart';
 class QuizPage extends StatelessWidget {
   final QuizType quizType;
   final int categoryIndex;
-  
-  const QuizPage({
-    Key? key, 
-    required this.quizType,
-    this.categoryIndex = 0,
-  }) : super(key: key);
+
+  const QuizPage({Key? key, required this.quizType, this.categoryIndex = 0})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Hapus controller yang sudah ada untuk menghindari konflik
     Get.delete<QuizController>(force: true);
-    
-    final controller = Get.put(QuizController(
-      quizType: quizType, 
-      categoryIndex: categoryIndex
-    ));
-    
+
+    final controller = Get.put(QuizController(quizType: quizType));
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.blue[100]!,
-              Colors.white,
-            ],
+            colors: [Colors.blue[100]!, Colors.white],
           ),
         ),
         child: SafeArea(
           child: Stack(
             children: [
-              // Floating decorative elements
-              Positioned(
-                top: 20,
-                right: 40,
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.yellow[300]?.withOpacity(0.6),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 100,
-                left: 20,
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.orange[300]?.withOpacity(0.6),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-              
               Column(
                 children: [
                   // Custom App Bar
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     child: Row(
                       children: [
                         // Back button with face
@@ -112,8 +79,44 @@ class QuizPage extends StatelessWidget {
                                 "Yuk, jawab soalnya!",
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: Colors.grey,
+                                  color: Color.fromRGBO(99, 99, 99, 1),
                                 ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Score indicator with stars - moved to header like habitat quiz
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 4),
+                              GetBuilder<QuizController>(
+                                id: 'score',
+                                builder: (controller) {
+                                  return Text(
+                                    "${controller.score}/${controller.questions.length}",
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  );
+                                },
                               ),
                             ],
                           ),
@@ -121,7 +124,7 @@ class QuizPage extends StatelessWidget {
                       ],
                     ),
                   ),
-                  
+
                   Expanded(
                     child: GetBuilder<QuizController>(
                       id: 'quiz_body',
@@ -132,37 +135,12 @@ class QuizPage extends StatelessWidget {
                             padding: const EdgeInsets.all(16),
                             child: Column(
                               children: [
-                                // Score indicator with stars
-                                Container(
-                                  margin: const EdgeInsets.only(bottom: 20),
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange[100],
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      ...List.generate(5, (index) {
-                                        return Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                                          child: Icon(
-                                            Icons.star,
-                                            color: index < controller.score 
-                                                ? Colors.amber 
-                                                : Colors.grey[300],
-                                            size: 28,
-                                          ),
-                                        );
-                                      }),
-                                    ],
-                                  ),
-                                ),
-                                
                                 // Question Image dengan border lucu
-                                if (controller.currentQuestion?.imageUrl != null)
+                                if (controller.currentQuestion?.imageUrl !=
+                                    null)
                                   Container(
-                                    width: MediaQuery.of(context).size.width * 0.8,
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.8,
                                     height: 200,
                                     decoration: BoxDecoration(
                                       color: Colors.white,
@@ -184,7 +162,11 @@ class QuizPage extends StatelessWidget {
                                       child: Image.network(
                                         controller.currentQuestion!.imageUrl!,
                                         fit: BoxFit.contain,
-                                        loadingBuilder: (context, child, loadingProgress) {
+                                        loadingBuilder: (
+                                          context,
+                                          child,
+                                          loadingProgress,
+                                        ) {
                                           if (loadingProgress == null) {
                                             return child;
                                           }
@@ -192,7 +174,8 @@ class QuizPage extends StatelessWidget {
                                             color: Colors.grey[100],
                                             child: Center(
                                               child: Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
                                                 children: [
                                                   CircularProgressIndicator(
                                                     color: Colors.blue,
@@ -204,7 +187,8 @@ class QuizPage extends StatelessWidget {
                                                     style: TextStyle(
                                                       color: Colors.grey[600],
                                                       fontSize: 16,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                                   ),
                                                 ],
@@ -212,11 +196,16 @@ class QuizPage extends StatelessWidget {
                                             ),
                                           );
                                         },
-                                        errorBuilder: (context, error, stackTrace) {
+                                        errorBuilder: (
+                                          context,
+                                          error,
+                                          stackTrace,
+                                        ) {
                                           return Container(
                                             color: Colors.red[50],
                                             child: Column(
-                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               children: [
                                                 Icon(
                                                   Icons.error_outline,
@@ -238,10 +227,10 @@ class QuizPage extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                
+
                                 const SizedBox(height: 20),
-                                
-                                // Question text dalam balon dialog
+
+                                // Question text dalam balon dialog (without yellow circle)
                                 if (controller.currentQuestion != null)
                                   Container(
                                     padding: const EdgeInsets.all(20),
@@ -256,47 +245,20 @@ class QuizPage extends StatelessWidget {
                                         ),
                                       ],
                                     ),
-                                    child: Stack(
-                                      children: [
-                                        // Dekorasi balon dialog
-                                        Positioned(
-                                          top: 0,
-                                          right: 0,
-                                          child: Container(
-                                            width: 40,
-                                            height: 40,
-                                            decoration: BoxDecoration(
-                                              color: Colors.yellow[300],
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: const Center(
-                                              child: Text(
-                                                '?',
-                                                style: TextStyle(
-                                                  fontSize: 24,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          controller.currentQuestion!.questionText,
-                                          style: const TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.blueGrey,
-                                            height: 1.4,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
+                                    child: Text(
+                                      controller.currentQuestion!.questionText,
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blueGrey,
+                                        height: 1.4,
+                                      ),
+                                      textAlign: TextAlign.center,
                                     ),
                                   ),
-                                
+
                                 const SizedBox(height: 30),
-                                
+
                                 // Answer options dengan animasi
                                 if (controller.currentQuestion != null)
                                   Wrap(
@@ -304,19 +266,38 @@ class QuizPage extends StatelessWidget {
                                     runSpacing: 16,
                                     alignment: WrapAlignment.center,
                                     children: List.generate(
-                                      controller.currentQuestion!.options.length,
+                                      controller
+                                          .currentQuestion!
+                                          .options
+                                          .length,
                                       (index) => GestureDetector(
-                                        onTap: () => controller.onAnswerTap(index),
+                                        onTap:
+                                            () => controller.onAnswerTap(index),
                                         child: AnimatedContainer(
-                                          duration: const Duration(milliseconds: 300),
-                                          width: (MediaQuery.of(context).size.width - 64) / 2,
+                                          duration: const Duration(
+                                            milliseconds: 300,
+                                          ),
+                                          width:
+                                              (MediaQuery.of(
+                                                    context,
+                                                  ).size.width -
+                                                  64) /
+                                              2,
                                           height: 80,
                                           decoration: BoxDecoration(
-                                            gradient: _getOptionGradient(controller, index),
-                                            borderRadius: BorderRadius.circular(20),
+                                            gradient: _getOptionGradient(
+                                              controller,
+                                              index,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: _getOptionShadowColor(controller, index).withOpacity(0.4),
+                                                color: _getOptionShadowColor(
+                                                  controller,
+                                                  index,
+                                                ).withOpacity(0.4),
                                                 blurRadius: 6,
                                                 offset: const Offset(0, 3),
                                               ),
@@ -332,15 +313,19 @@ class QuizPage extends StatelessWidget {
                                                   width: 30,
                                                   height: 30,
                                                   decoration: BoxDecoration(
-                                                    color: Colors.white.withOpacity(0.9),
+                                                    color: Colors.white
+                                                        .withOpacity(0.9),
                                                     shape: BoxShape.circle,
                                                   ),
                                                   child: Center(
                                                     child: Text(
-                                                      String.fromCharCode(97 + index).toUpperCase(),
+                                                      String.fromCharCode(
+                                                        97 + index,
+                                                      ).toUpperCase(),
                                                       style: const TextStyle(
                                                         fontSize: 16,
-                                                        fontWeight: FontWeight.bold,
+                                                        fontWeight:
+                                                            FontWeight.bold,
                                                       ),
                                                     ),
                                                   ),
@@ -348,12 +333,17 @@ class QuizPage extends StatelessWidget {
                                               ),
                                               Center(
                                                 child: Padding(
-                                                  padding: const EdgeInsets.all(8.0),
+                                                  padding: const EdgeInsets.all(
+                                                    8.0,
+                                                  ),
                                                   child: Text(
-                                                    controller.currentQuestion!.options[index],
+                                                    controller
+                                                        .currentQuestion!
+                                                        .options[index],
                                                     style: const TextStyle(
                                                       fontSize: 18,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                       color: Colors.white,
                                                       shadows: [
                                                         Shadow(
@@ -373,15 +363,18 @@ class QuizPage extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                
+
                                 const SizedBox(height: 30),
-                                
-                                // Progress dengan emoji
+
+                                // Progress dengan emoji - same style as habitat quiz
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(25),
+                                    color: Colors.white.withOpacity(0.8),
+                                    borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -391,18 +384,23 @@ class QuizPage extends StatelessWidget {
                                         style: TextStyle(fontSize: 20),
                                       ),
                                       const SizedBox(width: 8),
-                                      Text(
-                                        "Soal ${controller.currentQuestionIndex + 1} dari ${controller.questions.length}",
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.blueGrey,
-                                        ),
+                                      GetBuilder<QuizController>(
+                                        id: 'progress',
+                                        builder: (controller) {
+                                          return Text(
+                                            "Soal ${controller.currentQuestionIndex + 1} dari ${controller.questions.length}",
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.blueGrey,
+                                            ),
+                                          );
+                                        },
                                       ),
                                     ],
                                   ),
                                 ),
-                                
+
                                 const SizedBox(height: 40),
                               ],
                             ),
@@ -419,53 +417,33 @@ class QuizPage extends StatelessWidget {
       ),
     );
   }
-  
+
   // Helper untuk gradient warna options
   LinearGradient _getOptionGradient(QuizController controller, int index) {
     if (!controller.isAnswered) {
-      return LinearGradient(
-        colors: [
-          Colors.blue[400]!,
-          Colors.blue[600]!,
-        ],
-      );
+      return LinearGradient(colors: [Colors.blue[400]!, Colors.blue[600]!]);
     }
-    
+
     if (index == controller.currentQuestion!.correctAnswer) {
-      return LinearGradient(
-        colors: [
-          Colors.green[400]!,
-          Colors.green[600]!,
-        ],
-      );
-    } else if (index == controller.selectedAnswer && 
-               index != controller.currentQuestion!.correctAnswer) {
-      return LinearGradient(
-        colors: [
-          Colors.red[400]!,
-          Colors.red[600]!,
-        ],
-      );
+      return LinearGradient(colors: [Colors.green[400]!, Colors.green[600]!]);
+    } else if (index == controller.selectedAnswer &&
+        index != controller.currentQuestion!.correctAnswer) {
+      return LinearGradient(colors: [Colors.red[400]!, Colors.red[600]!]);
     } else {
-      return LinearGradient(
-        colors: [
-          Colors.grey[400]!,
-          Colors.grey[500]!,
-        ],
-      );
+      return LinearGradient(colors: [Colors.grey[400]!, Colors.grey[500]!]);
     }
   }
-  
+
   // Helper untuk shadow color
   Color _getOptionShadowColor(QuizController controller, int index) {
     if (!controller.isAnswered) {
       return Colors.blue;
     }
-    
+
     if (index == controller.currentQuestion!.correctAnswer) {
       return Colors.green;
-    } else if (index == controller.selectedAnswer && 
-               index != controller.currentQuestion!.correctAnswer) {
+    } else if (index == controller.selectedAnswer &&
+        index != controller.currentQuestion!.correctAnswer) {
       return Colors.red;
     } else {
       return Colors.grey;

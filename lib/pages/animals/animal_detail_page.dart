@@ -27,12 +27,12 @@ class AnimalDetailPage extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: Color.fromRGBO(224, 224, 224, 1.0),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
                         Icons.arrow_back,
-                        color: Colors.black,
+                        color: Color.fromRGBO(0, 0, 0, 1.0),
                         size: 24,
                       ),
                     ),
@@ -47,7 +47,10 @@ class AnimalDetailPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.blue[100]!, Colors.blue[50]!],
+                  colors: [
+                    Color.fromRGBO(187, 222, 251, 1.0),
+                    Color.fromRGBO(227, 242, 253, 1.0),
+                  ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -62,7 +65,7 @@ class AnimalDetailPage extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.indigo,
+                  color: Color.fromRGBO(63, 81, 181, 1.0),
                 ),
               ),
             ),
@@ -72,11 +75,11 @@ class AnimalDetailPage extends StatelessWidget {
               height: 180,
               margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: Color.fromRGBO(238, 238, 238, 1.0),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Color.fromRGBO(0, 0, 0, 0.3),
                     spreadRadius: 1,
                     blurRadius: 5,
                     offset: const Offset(0, 3),
@@ -87,13 +90,13 @@ class AnimalDetailPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 child: Image.network(
                   animal["photoUrl"],
-                  fit: BoxFit.fill,
+                  fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
                     return const Center(
                       child: Icon(
                         Icons.image_not_supported,
                         size: 50,
-                        color: Colors.grey,
+                        color: Color.fromRGBO(158, 158, 158, 1.0),
                       ),
                     );
                   },
@@ -116,7 +119,7 @@ class AnimalDetailPage extends StatelessWidget {
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.yellow[100],
+                            color: Color.fromRGBO(255, 249, 196, 1.0),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
@@ -124,7 +127,7 @@ class AnimalDetailPage extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.orange,
+                              color: Color.fromRGBO(255, 152, 0, 1.0),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -132,13 +135,130 @@ class AnimalDetailPage extends StatelessWidget {
 
                         const SizedBox(height: 16),
 
-                        // Sound Section
-                        _buildInfoSection(
-                          title: "SUARA",
-                          content: controller.getAnimalSound(),
-                          icon: Icons.volume_up,
-                          color: Colors.blue[100]!,
-                          iconColor: Colors.blue,
+                        // Sound Section with Interactive Play Button
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Color.fromRGBO(187, 222, 251, 1.0),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Color.fromRGBO(255, 255, 255, 1.0),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.volume_up,
+                                      color: Color.fromRGBO(33, 150, 243, 1.0),
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    "SUARA",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color.fromRGBO(33, 150, 243, 1.0),
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  // Play/Stop Button with Obx reactive state
+                                  Obx(
+                                    () => GestureDetector(
+                                      onTap: () => controller.playAnimalSound(),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              controller.isPlaying.value
+                                                  ? Color.fromRGBO(
+                                                    244,
+                                                    67,
+                                                    54,
+                                                    0.8,
+                                                  )
+                                                  : Color.fromRGBO(
+                                                    76,
+                                                    175,
+                                                    80,
+                                                    1.0,
+                                                  ),
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Color.fromRGBO(
+                                                0,
+                                                0,
+                                                0,
+                                                0.2,
+                                              ),
+                                              spreadRadius: 1,
+                                              blurRadius: 3,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Icon(
+                                          controller.isPlaying.value
+                                              ? Icons.stop
+                                              : Icons.play_arrow,
+                                          color: Color.fromRGBO(
+                                            255,
+                                            255,
+                                            255,
+                                            1.0,
+                                          ),
+                                          size: 28,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                controller.getAnimalSound(),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  height: 1.5,
+                                ),
+                              ),
+                              // Petunjuk untuk anak-anak
+                              const SizedBox(height: 8),
+                              Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Color.fromRGBO(255, 255, 255, 0.7),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: Color.fromRGBO(33, 150, 243, 1.0),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    "Tekan tombol di atas untuk mendengar suaranya!",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color.fromRGBO(33, 150, 243, 1.0),
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
 
                         const SizedBox(height: 12),
@@ -148,8 +268,8 @@ class AnimalDetailPage extends StatelessWidget {
                           title: "MAKANAN",
                           content: controller.getAnimalFood(),
                           icon: Icons.restaurant,
-                          color: Colors.green[100]!,
-                          iconColor: Colors.green,
+                          backgroundColor: Color.fromRGBO(200, 230, 201, 1.0),
+                          iconColor: Color.fromRGBO(76, 175, 80, 1.0),
                         ),
 
                         const SizedBox(height: 12),
@@ -159,8 +279,8 @@ class AnimalDetailPage extends StatelessWidget {
                           title: "KELUARGA",
                           content: controller.getAnimalFamily(),
                           icon: Icons.people,
-                          color: Colors.purple[100]!,
-                          iconColor: Colors.purple,
+                          backgroundColor: Color.fromRGBO(209, 196, 233, 1.0),
+                          iconColor: Color.fromRGBO(103, 58, 183, 1.0),
                         ),
 
                         const SizedBox(height: 12),
@@ -170,8 +290,8 @@ class AnimalDetailPage extends StatelessWidget {
                           title: "KEAHLIAN",
                           content: controller.getAnimalSkill(),
                           icon: Icons.star,
-                          color: Colors.orange[100]!,
-                          iconColor: Colors.orange,
+                          backgroundColor: Color.fromRGBO(255, 224, 178, 1.0),
+                          iconColor: Color.fromRGBO(255, 152, 0, 1.0),
                         ),
 
                         const SizedBox(height: 12),
@@ -181,14 +301,17 @@ class AnimalDetailPage extends StatelessWidget {
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Colors.pink[100]!, Colors.purple[50]!],
+                              colors: [
+                                Color.fromRGBO(248, 187, 208, 1.0),
+                                Color.fromRGBO(225, 190, 231, 1.0),
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.grey.withOpacity(0.3),
+                                color: Color.fromRGBO(0, 0, 0, 0.3),
                                 spreadRadius: 1,
                                 blurRadius: 5,
                                 offset: const Offset(0, 3),
@@ -201,7 +324,7 @@ class AnimalDetailPage extends StatelessWidget {
                                 children: [
                                   const Icon(
                                     Icons.lightbulb,
-                                    color: Colors.amber,
+                                    color: Color.fromRGBO(255, 193, 7, 1.0),
                                     size: 28,
                                   ),
                                   const SizedBox(width: 8),
@@ -210,19 +333,19 @@ class AnimalDetailPage extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.deepPurple,
+                                      color: Color.fromRGBO(103, 58, 183, 1.0),
                                     ),
                                   ),
                                   const Spacer(),
                                   Container(
                                     padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
+                                    decoration: const BoxDecoration(
+                                      color: Color.fromRGBO(255, 255, 255, 1.0),
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
                                       Icons.emoji_events,
-                                      color: Colors.amber,
+                                      color: Color.fromRGBO(255, 193, 7, 1.0),
                                       size: 20,
                                     ),
                                   ),
@@ -252,29 +375,32 @@ class AnimalDetailPage extends StatelessWidget {
       ),
       // AR View Button - Fixed at bottom
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Container(
+      floatingActionButton: SizedBox(
         width: MediaQuery.of(context).size.width * 0.9,
         height: 60,
         child: ElevatedButton(
           onPressed: () => controller.onViewInAR(),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
+            backgroundColor: Color.fromRGBO(33, 150, 243, 1.0),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
             ),
             elevation: 8,
-            shadowColor: Colors.blue.withOpacity(0.5),
+            shadowColor: Color.fromRGBO(33, 150, 243, 0.5),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(255, 255, 255, 1.0),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.view_in_ar, color: Colors.blue),
+                child: const Icon(
+                  Icons.view_in_ar,
+                  color: Color.fromRGBO(33, 150, 243, 1.0),
+                ),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -282,13 +408,13 @@ class AnimalDetailPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Color.fromRGBO(255, 255, 255, 1.0),
                 ),
               ),
               const SizedBox(width: 4),
               const Icon(
                 Icons.arrow_forward_ios,
-                color: Colors.white,
+                color: Color.fromRGBO(255, 255, 255, 1.0),
                 size: 16,
               ),
             ],
@@ -302,13 +428,13 @@ class AnimalDetailPage extends StatelessWidget {
     required String title,
     required String content,
     required IconData icon,
-    required Color color,
+    required Color backgroundColor,
     required Color iconColor,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color,
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -318,8 +444,8 @@ class AnimalDetailPage extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(255, 255, 255, 1.0),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: iconColor, size: 20),
@@ -342,47 +468,3 @@ class AnimalDetailPage extends StatelessWidget {
     );
   }
 }
-
-// Update animal_detail_controller.dart to add these new helper methods
-// that return individual sections of the description
-/*
-String getAnimalSound() {
-  switch(animal["name"]) {
-    case "Ayam":
-      return "Ayam berbunyi 'kukuruyuk' dan 'kotkotkot'.";
-    // other animals...
-  }
-}
-
-String getAnimalFood() {
-  switch(animal["name"]) {
-    case "Ayam":
-      return "Ayam makan biji-bijian, serangga, dan cacing.";
-    // other animals...
-  }
-}
-
-String getAnimalFamily() {
-  switch(animal["name"]) {
-    case "Ayam":
-      return "Ayam jantan disebut jago\nAyam betina disebut induk ayam\nAnaknya disebut anak ayam";
-    // other animals...
-  }
-}
-
-String getAnimalSkill() {
-  switch(animal["name"]) {
-    case "Ayam":
-      return "Ayam bisa mengenali lebih dari 100 ayam lain dalam kelompoknya.";
-    // other animals...
-  }
-}
-
-String getAnimalFunFact() {
-  switch(animal["name"]) {
-    case "Ayam":
-      return "Ayam adalah keturunan dinosaurus! Mereka adalah kerabat terdekat dari T-Rex yang masih hidup saat ini.";
-    // other animals...
-  }
-}
-*/

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_2/pages/home/home_page.dart';
 import 'package:get/get.dart';
 import 'constants/color_constant.dart';
 import 'pages/onboarding/onboarding_page.dart';
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       debugShowCheckedModeBanner: false,
-      home: const OnboardingPage(),
+      home: const HomePage(),
     );
   }
 }

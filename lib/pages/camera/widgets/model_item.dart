@@ -24,7 +24,7 @@ class ModelItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               image: DecorationImage(
                 image: NetworkImage(imageUrl),
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
               ),
             ),
           ),

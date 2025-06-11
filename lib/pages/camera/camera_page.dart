@@ -211,7 +211,7 @@ class CameraPage extends StatelessWidget {
       ),
     );
   }
-  
+   
   Widget _buildControlButton({
     required IconData icon,
     required String label,
