@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application_2/constants/assets_constant.dart';
 import 'package:get/get.dart';
 import 'package:ar_flutter_plugin_2/ar_flutter_plugin.dart';
@@ -18,7 +19,7 @@ import 'package:ar_flutter_plugin_2/models/ar_node.dart';
 import 'package:vector_math/vector_math_64.dart' as vector;
 import 'package:flutter_application_2/pages/animals/animal_controller.dart';
 
-class CameraController extends GetxController {
+class KidFriendlyARController extends GetxController {
   // AR related variables
   ARSessionManager? arSessionManager;
   ARObjectManager? arObjectManager;
@@ -31,39 +32,47 @@ class CameraController extends GetxController {
   RxBool isARInitialized = false.obs;
   RxBool isPlaneScanningComplete = false.obs;
   RxBool isPlaneDetectionInProgress = false.obs;
-  RxBool isPlaneDetectionActive = true.obs; // NEW: Control plane detection
+  RxBool isPlaneDetectionActive = true.obs;
 
   // Track model placement and properties
   RxBool isModelPlaced = false.obs;
   RxBool isLoading = false.obs;
   ARNode? currentNode;
   ARPlaneAnchor? currentPlaneAnchor;
-  RxDouble currentScale = 0.6.obs;
-  final double scaleStep = 0.05;
-  final double minScale = 0.1;
-  final double maxScale = 1.0;
+  RxDouble currentScale = 0.4.obs; // Smaller default for kids
+  final double scaleStep = 0.1; // Bigger steps for easier control
+  final double minScale = 0.2; // Larger minimum for visibility
+  final double maxScale = 0.8; // Smaller maximum to avoid overwhelming
 
-  // Improved tracking stabilization variables
+  // Kid-friendly tracking optimization
   RxInt detectedPlanesCount = 0.obs;
   RxBool hasFoundGoodAnchor = false.obs;
   List<ARHitTestResult> _hitTestBuffer = [];
-  final int _bufferSize = 8; // Reduced from 12 for faster response
-  final int _initialBufferSize = 3; // Reduced from 6 for faster initial placement
-  final int _refinementBufferSize = 6; // Reduced from 12 for faster refinement
+  final int _initialBufferSize = 2; // Very fast initial placement
+  final int _refinementBufferSize = 3; // Quick refinement
   RxBool isInitialPlacement = true.obs;
   Timer? _stabilizationTimer;
-  Timer? _planeDetectionTimeoutTimer; // NEW: Timeout for plane detection
+  Timer? _planeDetectionTimeoutTimer;
+  Timer? _guidanceTimer;
 
-  // Performance optimization variables
-  RxDouble planeDetectionConfidence = 0.0.obs; // NEW: Track detection confidence
-  final int minPlanesForGoodTracking = 2; // Reduced from 3 for faster detection
-  final int maxPlaneDetectionTime = 5; // NEW: Max time in seconds for plane detection
+  // Kid-friendly performance variables
+  final int minPlanesForGoodTracking = 1; // Just need 1 plane for simplicity
+  final int maxPlaneDetectionTime = 8; // Longer timeout for patience
+  RxString currentGuidanceMessage = "".obs;
+  RxString currentGuidanceIcon = "🔍".obs;
+  RxBool showVisualHelper = true.obs;
+
+  // Visual feedback for kids
+  RxDouble detectionProgress = 0.0.obs;
+  RxString detectionStatus = "Mencari permukaan...".obs;
+  Rx<Color> currentStatusColor = Colors.blue.obs;
 
   // Reference to the AnimalController
   final AnimalController animalController = Get.find<AnimalController>();
 
-  // Plane size limitation (reduced for faster detection)
-   final double maxPlaneHeight = 0.3; // Reduced from 0.5
+  // More forgiving plane size for kids
+  final double maxPlaneWidth = 0.4; // Slightly larger area
+  final double maxPlaneHeight = 0.4;
 
   // Combined animals list from AnimalController
   List<Map<String, dynamic>> get allAnimals {
@@ -73,84 +82,117 @@ class CameraController extends GetxController {
     return combined;
   }
 
-  // Get models for display - using AnimalController data
   List<Map<String, dynamic>> get models3dList => allAnimals;
 
   @override
   void onInit() {
     super.onInit();
+    _initializeKidFriendlySettings();
+    _setupInitialAnimalSelection();
+    _startKidFriendlyGuidance();
+  }
 
-    // Check if we have arguments from AnimalDetailPage
+  void _initializeKidFriendlySettings() {
+    // Enable haptic feedback for better interaction
+    SystemChannels.platform.invokeMethod('HapticFeedback.lightImpact');
+    
+    // Set initial guidance
+    currentGuidanceMessage.value = "Mari cari permukaan datar! 📱";
+    currentGuidanceIcon.value = "🔍";
+  }
+
+  void _setupInitialAnimalSelection() {
+    // Auto-select animal if coming from detail page
     if (Get.arguments != null && Get.arguments is Map<String, dynamic>) {
       final animal = Get.arguments as Map<String, dynamic>;
-
-      // Find matching animal in our combined animals list
       final modelIndex = allAnimals.indexWhere(
         (model) => model["name"] == animal["name"],
       );
 
       if (modelIndex != -1) {
-        // Pre-select the model that matches the animal from detail page
-        Future.delayed(Duration(seconds: 1), () {
+        Future.delayed(Duration(milliseconds: 800), () {
           onModelTap(modelIndex);
-
-          // Show guidance to place the animal once AR is initialized
-          Future.delayed(Duration(seconds: 2), () { // Reduced from 3 seconds
-            if (isARInitialized.value && isPlaneScanningComplete.value) {
-              Get.snackbar(
-                "Sentuh layar",
-                "Untuk menempatkan ${allAnimals[modelIndex]["name"]}",
-                duration: Duration(seconds: 2),
-                snackPosition: SnackPosition.TOP,
-              );
-            }
-          });
         });
       }
     }
+  }
 
-    // Start improved timer to monitor plane detection quality
-    _stabilizationTimer = Timer.periodic(Duration(milliseconds: 500), (timer) { // Faster checking
+  void _startKidFriendlyGuidance() {
+    // Progressive guidance system for kids
+    _guidanceTimer = Timer.periodic(Duration(seconds: 2), (timer) {
+      if (!isARInitialized.value) {
+        _updateGuidanceMessage("Menyiapkan kamera... 📷", "⏳");
+      } else if (isPlaneDetectionInProgress.value) {
+        if (detectedPlanesCount.value == 0) {
+          _updateGuidanceMessage("Arahkan kamera ke meja atau lantai 📱", "👀");
+        } else {
+          _updateGuidanceMessage("Bagus! Terus gerakkan kamera perlahan 👍", "🎯");
+        }
+      } else if (isPlaneScanningComplete.value && selectedModelUrl.value.isNotEmpty) {
+        _updateGuidanceMessage("Sentuh layar untuk menempatkan hewan! 👆", "✨");
+        timer.cancel();
+      }
+    });
+
+    // Quick plane detection monitor for kids
+    _stabilizationTimer = Timer.periodic(Duration(milliseconds: 300), (timer) {
       if (isPlaneDetectionInProgress.value && detectedPlanesCount.value >= minPlanesForGoodTracking) {
         hasFoundGoodAnchor.value = true;
         isPlaneScanningComplete.value = true;
         isPlaneDetectionInProgress.value = false;
+        detectionProgress.value = 1.0;
+        detectionStatus.value = "Permukaan ditemukan! ✅";
+        currentStatusColor.value = Colors.green;
+        
+        // Haptic feedback for success
+        SystemChannels.platform.invokeMethod('HapticFeedback.mediumImpact');
+        
         timer.cancel();
-
-        // Show feedback about good anchor found
-        Get.snackbar(
-          "Permukaan terdeteksi!",
-          "Ketuk untuk menempatkan model",
-          duration: Duration(seconds: 1), // Shorter duration
-          backgroundColor: Colors.green.withOpacity(0.8),
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
+        _showSuccessAnimation();
+      } else if (isPlaneDetectionInProgress.value) {
+        // Update progress gradually for visual feedback
+        detectionProgress.value = min(detectedPlanesCount.value / 3.0, 0.8);
       }
     });
 
-    // NEW: Timeout timer for plane detection
+    // Kid-friendly timeout
     _planeDetectionTimeoutTimer = Timer(Duration(seconds: maxPlaneDetectionTime), () {
       if (isPlaneDetectionInProgress.value) {
         isPlaneScanningComplete.value = true;
         isPlaneDetectionInProgress.value = false;
+        detectionProgress.value = 0.6;
+        detectionStatus.value = "Coba sentuh layar ya! 😊";
+        currentStatusColor.value = Colors.orange;
         
-        Get.snackbar(
-          "Mode manual aktif",
-          "Ketuk layar untuk mencoba menempatkan model",
-          duration: Duration(seconds: 2),
-          backgroundColor: Colors.orange.withOpacity(0.8),
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
+        _updateGuidanceMessage("Tidak apa-apa, coba tap layar sekarang! 😊", "👆");
       }
     });
+  }
+
+  void _updateGuidanceMessage(String message, String icon) {
+    currentGuidanceMessage.value = message;
+    currentGuidanceIcon.value = icon;
+  }
+
+  void _showSuccessAnimation() {
+    // Show exciting success message for kids
+    Get.snackbar(
+      "🎉 Berhasil!",
+      "Sekarang pilih hewan dan sentuh layar! 🐸🦋🐠",
+      duration: Duration(seconds: 2),
+      backgroundColor: Colors.green.withOpacity(0.9),
+      colorText: Colors.white,
+      snackPosition: SnackPosition.TOP,
+      borderRadius: 15,
+      margin: EdgeInsets.all(10),
+    );
   }
 
   @override
   void onClose() {
     _stabilizationTimer?.cancel();
     _planeDetectionTimeoutTimer?.cancel();
+    _guidanceTimer?.cancel();
     arSessionManager?.dispose();
     super.onClose();
   }
@@ -160,43 +202,49 @@ class CameraController extends GetxController {
   }
 
   void onModelTap(int index) {
-    // Validate index bounds
+    // Enhanced validation with kid-friendly messages
     if (index < 0 || index >= allAnimals.length) {
-      Get.snackbar(
-        "Error",
-        "Model tidak ditemukan",
-        duration: Duration(seconds: 2),
-        snackPosition: SnackPosition.TOP,
-      );
+      _showKidFriendlyError("Ups! Hewan tidak ditemukan 😅", "Coba pilih hewan yang lain ya!");
       return;
     }
 
-    // Reset model placement if a new model is selected
+    // Reset with positive reinforcement
     if (isModelPlaced.value) {
       resetModel();
     }
 
-    // Get the selected model from combined animals list
     final selectedModel = allAnimals[index];
-
-    // Set the selected model for AR display
     selectedModelUrl.value = selectedModel["model3dUrl"];
     selectedModelName.value = selectedModel["name"];
+    currentScale.value = 0.4; // Kid-friendly default size
 
-    // Reset scale to default
-    currentScale.value = 0.5;
-
-    // Reset to initial placement mode for new model
     isInitialPlacement.value = true;
 
-    // Show guidance
+    // Exciting feedback for kids
+    SystemChannels.platform.invokeMethod('HapticFeedback.selectionClick');
+    
     Get.snackbar(
-      "${selectedModel["name"]} dipilih",
+      "🎉 ${selectedModel["name"]} dipilih!",
       hasFoundGoodAnchor.value
-          ? "Sentuh layar untuk menempatkan hewan"
-          : "Arahkan kamera ke permukaan datar",
-      duration: Duration(seconds: 1), // Shorter duration
+          ? "Sekarang sentuh layar untuk menempatkan hewan! 👆"
+          : "Arahkan kamera ke permukaan datar dulu ya! 📱",
+      duration: Duration(seconds: 2),
+      backgroundColor: Colors.purple.withOpacity(0.8),
+      colorText: Colors.white,
       snackPosition: SnackPosition.TOP,
+      borderRadius: 15,
+    );
+  }
+
+  void _showKidFriendlyError(String title, String message) {
+    Get.snackbar(
+      title,
+      message,
+      duration: Duration(seconds: 2),
+      backgroundColor: Colors.orange.withOpacity(0.8),
+      colorText: Colors.white,
+      snackPosition: SnackPosition.TOP,
+      borderRadius: 15,
     );
   }
 
@@ -212,28 +260,27 @@ class CameraController extends GetxController {
     }
   }
 
-  // Method to get category name
   String getCategoryName(int categoryIndex) {
     switch (categoryIndex) {
       case 0:
-        return "Vertebrata";
+        return "🦴 Vertebrata";
       case 1:
-        return "Invertebrata";
+        return "🐛 Invertebrata";
       default:
-        return "Semua Hewan";
+        return "🌟 Semua Hewan";
     }
   }
 
-  // NEW: Method to stop plane detection after model placement
+  // Simplified plane detection stop/start for kids
   void _stopPlaneDetection() {
     if (isPlaneDetectionActive.value) {
       isPlaneDetectionActive.value = false;
+      showVisualHelper.value = false;
       
-      // Disable plane detection in AR session (using supported parameters)
       arSessionManager?.onInitialize(
         showFeaturePoints: false,
         customPlaneTexturePath: AssetsCollection.logo,
-        showPlanes: true, // Disable plane visualization
+        showPlanes: false, // Hide plane visualization for cleaner view
         showWorldOrigin: false,
         handlePans: true,
         handleRotation: true,
@@ -241,19 +288,21 @@ class CameraController extends GetxController {
         handleTaps: true,
       );
       
-      print("Plane detection stopped after model placement");
+      print("Plane detection stopped for kid-friendly mode");
     }
   }
 
-  // NEW: Method to restart plane detection
   void _restartPlaneDetection() {
     if (!isPlaneDetectionActive.value) {
       isPlaneDetectionActive.value = true;
       isPlaneDetectionInProgress.value = true;
       hasFoundGoodAnchor.value = false;
       detectedPlanesCount.value = 0;
+      showVisualHelper.value = true;
+      detectionProgress.value = 0.0;
+      detectionStatus.value = "Mencari permukaan...";
+      currentStatusColor.value = Colors.blue;
       
-      // Re-enable plane detection in AR session (using supported parameters)
       arSessionManager?.onInitialize(
         showFeaturePoints: false,
         customPlaneTexturePath: AssetsCollection.logo,
@@ -265,18 +314,8 @@ class CameraController extends GetxController {
         handleTaps: true,
       );
       
-      // Restart timers
-      _stabilizationTimer?.cancel();
-      _stabilizationTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
-        if (isPlaneDetectionInProgress.value && detectedPlanesCount.value >= minPlanesForGoodTracking) {
-          hasFoundGoodAnchor.value = true;
-          isPlaneScanningComplete.value = true;
-          isPlaneDetectionInProgress.value = false;
-          timer.cancel();
-        }
-      });
-      
-      print("Plane detection restarted");
+      _startKidFriendlyGuidance();
+      print("Plane detection restarted for kids");
     }
   }
 
@@ -291,45 +330,42 @@ class CameraController extends GetxController {
     this.arAnchorManager = arAnchorManager;
     this.arLocationManager = arLocationManager;
 
-    // Start plane detection process with optimized settings
+    // Kid-friendly AR initialization
     isPlaneDetectionInProgress.value = true;
     isPlaneDetectionActive.value = true;
     hasFoundGoodAnchor.value = false;
     detectedPlanesCount.value = 0;
 
-    // Initialize AR session with optimized settings for faster plane detection
+    // Optimized settings for kids (simpler, more forgiving)
     this.arSessionManager!.onInitialize(
-      showFeaturePoints: false, // Keep disabled for performance
+      showFeaturePoints: false, // Keep disabled for less confusion
       customPlaneTexturePath: AssetsCollection.logo,
       showPlanes: true,
       showWorldOrigin: false,
       handlePans: true,
       handleRotation: true,
-      showAnimatedGuide: true,
+      showAnimatedGuide: true, // Show guide to help kids
       handleTaps: true,
     );
 
-    // Initialize object manager
     this.arObjectManager!.onInitialize();
 
-    // Set up plane detected handler
+    // Set up callbacks
     this.arSessionManager!.onPlaneDetected = onPlaneDetected;
-
-    // Set up tap handler
     this.arSessionManager!.onPlaneOrPointTap = onPlaneOrPointTapped;
 
-    // Set up gesture handlers
+    // Simplified gesture handling for kids
     this.arObjectManager!.onPanStart = onPanStarted;
-    this.arObjectManager!.onPanChange = onPanChanged;
     this.arObjectManager!.onPanEnd = onPanEnded;
     this.arObjectManager!.onRotationStart = onRotationStarted;
-    this.arObjectManager!.onRotationChange = onRotationChanged;
     this.arObjectManager!.onRotationEnd = onRotationEnded;
 
     isARInitialized.value = true;
+    currentGuidanceMessage.value = "Kamera siap! Cari permukaan datar 📱";
+    currentGuidanceIcon.value = "📱";
 
-    // Reduced delay for more responsive initialization
-    Future.delayed(Duration(milliseconds: 1500), () {
+    // Quick second initialization for stability
+    Future.delayed(Duration(seconds: 1), () {
       if (isPlaneDetectionActive.value) {
         this.arSessionManager!.onInitialize(
           showFeaturePoints: false,
@@ -338,148 +374,105 @@ class CameraController extends GetxController {
           showWorldOrigin: false,
           handlePans: true,
           handleRotation: true,
-          showAnimatedGuide: false,
+          showAnimatedGuide: false, // Disable after initial help
           handleTaps: true,
         );
       }
     });
   }
 
-  // Improved callback when a new plane is detected
+  // Kid-friendly plane detection callback
   void onPlaneDetected(int planeCount) {
-    if (!isPlaneDetectionActive.value) return; // Skip if detection is disabled
+    if (!isPlaneDetectionActive.value) return;
     
     detectedPlanesCount.value = planeCount;
-    planeDetectionConfidence.value = min(planeCount / minPlanesForGoodTracking, 1.0);
     
-    print("Detected plane #${planeCount} (confidence: ${(planeDetectionConfidence.value * 100).toInt()}%)");
+    print("Kid mode: Detected plane #${planeCount}");
     
-    // Provide immediate feedback to user
+    // Progressive encouragement for kids
     if (planeCount == 1) {
-      Get.snackbar(
-        "Mencari permukaan...",
-        "Gerakkan kamera perlahan",
-        duration: Duration(milliseconds: 800),
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.blue.withOpacity(0.6),
-        colorText: Colors.white,
-      );
+      _updateGuidanceMessage("Bagus! Satu permukaan ditemukan! 👍", "🎯");
+      detectionStatus.value = "Permukaan terdeteksi...";
+      currentStatusColor.value = Colors.green;
+      
+      // Light haptic feedback
+      SystemChannels.platform.invokeMethod('HapticFeedback.lightImpact');
     }
   }
 
-  // Optimized stabilization with faster response
-  ARHitTestResult? _getStableHitResult(List<ARHitTestResult> hitTestResults) {
+  // Super simplified hit result processing for kids
+  ARHitTestResult? _getKidFriendlyHitResult(List<ARHitTestResult> hitTestResults) {
     if (hitTestResults.isEmpty) return null;
 
-    // Find plane hits with priority
+    // Just take the first good hit for simplicity
     var planeHits = hitTestResults
         .where((hit) => hit.type == ARHitTestResultType.plane)
         .toList();
 
     var bestHit = planeHits.isNotEmpty ? planeHits.first : hitTestResults.first;
 
-    // Use smaller buffer sizes for faster response
-    int effectiveBufferSize = isInitialPlacement.value ? _initialBufferSize : _refinementBufferSize;
-
+    // Very minimal buffering for immediate response
     _hitTestBuffer.add(bestHit);
-    if (_hitTestBuffer.length > effectiveBufferSize) {
+    if (_hitTestBuffer.length > 2) {
       _hitTestBuffer.removeAt(0);
     }
 
-    // Start with just 2 samples for even faster response
-    if (_hitTestBuffer.length < 2) {
-      return bestHit;
-    }
-
-    try {
-      // Simplified averaging for better performance
-      vector.Vector3 averagePosition = vector.Vector3.zero();
-      
-      for (int i = 0; i < _hitTestBuffer.length; i++) {
-        vector.Vector3 position = _hitTestBuffer[i].worldTransform.getTranslation();
-        averagePosition += position;
-      }
-      
-      // Simple average instead of weighted average for speed
-      averagePosition.scale(1.0 / _hitTestBuffer.length);
-
-      return bestHit;
-    } catch (e) {
-      print("Error stabilizing hit result: $e");
-      return bestHit;
-    }
+    // Accept placement immediately for better kid experience
+    return bestHit;
   }
 
-  Future<void> onPlaneOrPointTapped(
-    List<ARHitTestResult> hitTestResults,
-  ) async {
-    // If no model is selected, show message and return
+  Future<void> onPlaneOrPointTapped(List<ARHitTestResult> hitTestResults) async {
+    // Kid-friendly validation messages
     if (selectedModelUrl.value.isEmpty) {
-      Get.snackbar(
-        "Pilih model terlebih dahulu",
-        "Tap pada hewan di bawah",
-        duration: Duration(seconds: 1),
-        snackPosition: SnackPosition.TOP,
+      _showKidFriendlyError(
+        "🐾 Pilih hewan dulu ya!",
+        "Tap pada gambar hewan di bawah 👇"
       );
       return;
     }
 
-    // If already placed, ignore tap (use reset instead)
     if (isModelPlaced.value) {
-      Get.snackbar(
-        "Model sudah ditempatkan",
-        "Gunakan tombol reset untuk menempatkan ulang",
-        duration: Duration(seconds: 1),
-        snackPosition: SnackPosition.TOP,
+      _showKidFriendlyError(
+        "🎯 Hewan sudah ada!",
+        "Pakai tombol reset kalau mau ganti tempat 🔄"
       );
       return;
     }
 
-    // If loading, prevent multiple taps
     if (isLoading.value) return;
 
-    // If no hit results, show guidance
     if (hitTestResults.isEmpty) {
-      Get.snackbar(
-        "Permukaan tidak terdeteksi",
-        "Arahkan kamera ke permukaan datar",
-        duration: Duration(seconds: 1),
-        snackPosition: SnackPosition.TOP,
+      _showKidFriendlyError(
+        "🔍 Belum ketemu permukaan",
+        "Coba arahkan kamera ke meja atau lantai 📱"
       );
       return;
     }
 
-    // Set loading state
     isLoading.value = true;
 
     try {
-      // Get stabilized hit result with faster processing
-      ARHitTestResult? stableHit = _getStableHitResult(hitTestResults);
+      // Kid-friendly hit processing
+      ARHitTestResult? stableHit = _getKidFriendlyHitResult(hitTestResults);
 
       if (stableHit == null) {
-        Get.snackbar(
-          "Tracking tidak stabil",
-          "Coba tahan kamera lebih stabil dan tap lagi",
-          duration: Duration(seconds: 1),
-          snackPosition: SnackPosition.TOP,
+        _showKidFriendlyError(
+          "📱 Kamera perlu lebih stabil",
+          "Pegang kamera dengan kedua tangan ya! 🙌"
         );
         isLoading.value = false;
         return;
       }
 
-      // Reduced delay for faster placement
-      await Future.delayed(Duration(milliseconds: 100));
+      // Very quick placement for instant gratification
+      await Future.delayed(Duration(milliseconds: 50));
 
-      // Create anchor at hit location
-      currentPlaneAnchor = ARPlaneAnchor(
-        transformation: stableHit.worldTransform,
-      );
-
-      // Add the anchor
+      // Create anchor
+      currentPlaneAnchor = ARPlaneAnchor(transformation: stableHit.worldTransform);
       bool? anchorAdded = await arAnchorManager!.addAnchor(currentPlaneAnchor!);
 
       if (anchorAdded == true) {
-        // Create a node (3D model)
+        // Create kid-friendly sized model
         currentNode = ARNode(
           type: NodeType.webGLB,
           uri: selectedModelUrl.value,
@@ -492,7 +485,6 @@ class CameraController extends GetxController {
           rotation: vector.Vector4(1, 0, 0, 0),
         );
 
-        // Add the node to the anchor
         bool? nodeAdded = await arObjectManager!.addNode(
           currentNode!,
           planeAnchor: currentPlaneAnchor,
@@ -502,69 +494,51 @@ class CameraController extends GetxController {
           isModelPlaced.value = true;
           isInitialPlacement.value = false;
           
-          // IMPORTANT: Stop plane detection after successful placement
           _stopPlaneDetection();
-          
-          // Cancel timers as we no longer need plane detection
           _stabilizationTimer?.cancel();
           _planeDetectionTimeoutTimer?.cancel();
+          _guidanceTimer?.cancel();
 
+          // Exciting success for kids!
+          SystemChannels.platform.invokeMethod('HapticFeedback.heavyImpact');
+          
           Get.snackbar(
-            "Berhasil! ✓",
-            "${selectedModelName.value} telah ditempatkan",
-            duration: Duration(seconds: 1),
-            backgroundColor: Colors.green.withOpacity(0.8),
+            "🎉 Wah Keren!",
+            "${selectedModelName.value} berhasil ditempatkan! Coba geser atau putar hewannya! 👏",
+            duration: Duration(seconds: 3),
+            backgroundColor: Colors.green.withOpacity(0.9),
             colorText: Colors.white,
             snackPosition: SnackPosition.TOP,
+            borderRadius: 15,
+            margin: EdgeInsets.all(10),
           );
+
+          _updateGuidanceMessage("Berhasil! Sekarang bisa main dengan hewannya! 🎮", "🎉");
         } else {
-          // If node couldn't be added, clear the anchor
           await arAnchorManager!.removeAnchor(currentPlaneAnchor!);
           currentPlaneAnchor = null;
           currentNode = null;
-
-          Get.snackbar(
-            "Gagal menambahkan model",
-            "Coba lagi",
-            duration: Duration(seconds: 1),
-            snackPosition: SnackPosition.TOP,
-          );
+          _showKidFriendlyError("😅 Ups, coba lagi ya!", "Sentuh layar sekali lagi");
         }
       } else {
-        Get.snackbar(
-          "Gagal membuat anchor",
-          "Coba lagi",
-          duration: Duration(seconds: 1),
-          snackPosition: SnackPosition.TOP,
-        );
+        _showKidFriendlyError("😅 Belum berhasil", "Coba sentuh layar lagi");
       }
     } catch (e) {
-      print("Error placing model: $e");
-      Get.snackbar(
-        "Error",
-        "Terjadi kesalahan: $e",
-        duration: Duration(seconds: 1),
-        snackPosition: SnackPosition.TOP,
-      );
+      print("Kid-friendly error: $e");
+      _showKidFriendlyError("😅 Ada masalah kecil", "Coba lagi ya!");
     } finally {
       isLoading.value = false;
     }
   }
 
-  // Function to change model scale (optimized)
+  // Kid-friendly scaling with bigger steps
   void changeScale(bool increase) {
     if (!isModelPlaced.value || currentNode == null) {
-      Get.snackbar(
-        "Tidak ada model",
-        "Tempatkan model terlebih dahulu",
-        duration: Duration(seconds: 1),
-        snackPosition: SnackPosition.TOP,
-      );
+      _showKidFriendlyError("🐾 Belum ada hewan", "Tempatkan hewan dulu ya!");
       return;
     }
 
     if (isLoading.value) return;
-
     isLoading.value = true;
 
     try {
@@ -580,8 +554,7 @@ class CameraController extends GetxController {
       if (newScale != currentScale.value) {
         arObjectManager!.removeNode(currentNode!);
 
-        // Reduced delay for faster scaling
-        Future.delayed(Duration(milliseconds: 200), () {
+        Future.delayed(Duration(milliseconds: 150), () {
           ARNode newNode = ARNode(
             type: NodeType.webGLB,
             uri: selectedModelUrl.value,
@@ -590,35 +563,37 @@ class CameraController extends GetxController {
             rotation: vector.Vector4(1, 0, 0, 0),
           );
 
-          arObjectManager!
-              .addNode(newNode, planeAnchor: currentPlaneAnchor)
-              .then((success) {
-                if (success == true) {
-                  currentNode = newNode;
-                  currentScale.value = newScale;
+          arObjectManager!.addNode(newNode, planeAnchor: currentPlaneAnchor).then((success) {
+            if (success == true) {
+              currentNode = newNode;
+              currentScale.value = newScale;
 
-                  Get.snackbar(
-                    increase ? "Diperbesar" : "Diperkecil",
-                    "${(newScale * 100).toInt()}%",
-                    duration: Duration(milliseconds: 800),
-                    backgroundColor: Colors.blue.withOpacity(0.7),
-                    colorText: Colors.white,
-                    snackPosition: SnackPosition.BOTTOM,
-                  );
-                }
-                isLoading.value = false;
-              });
+              // Fun feedback for kids
+              SystemChannels.platform.invokeMethod('HapticFeedback.selectionClick');
+              
+              Get.snackbar(
+                increase ? "🔍 Lebih Besar!" : "🔍 Lebih Kecil!",
+                "Ukuran: ${(newScale * 100).toInt()}%",
+                duration: Duration(milliseconds: 1000),
+                backgroundColor: Colors.blue.withOpacity(0.8),
+                colorText: Colors.white,
+                snackPosition: SnackPosition.BOTTOM,
+                borderRadius: 15,
+              );
+            }
+            isLoading.value = false;
+          });
         });
       } else {
         isLoading.value = false;
       }
     } catch (e) {
-      print("Error changing scale: $e");
+      print("Scale error: $e");
       isLoading.value = false;
     }
   }
 
-  // Function to reset model and restart plane detection
+  // Kid-friendly reset with encouraging message
   void resetModel() {
     if (!isModelPlaced.value) return;
     if (isLoading.value) return;
@@ -626,73 +601,81 @@ class CameraController extends GetxController {
     isLoading.value = true;
 
     try {
-      // Clear stabilization buffer
       _hitTestBuffer.clear();
       isInitialPlacement.value = true;
 
-      // Remove current node
       if (currentNode != null) {
         arObjectManager?.removeNode(currentNode!);
         currentNode = null;
       }
 
-      Future.delayed(Duration(milliseconds: 200), () {
-        // Remove current anchor
+      Future.delayed(Duration(milliseconds: 150), () {
         if (currentPlaneAnchor != null) {
           arAnchorManager?.removeAnchor(currentPlaneAnchor!);
           currentPlaneAnchor = null;
         }
 
-        // Reset states
         isModelPlaced.value = false;
-        currentScale.value = 0.5;
+        currentScale.value = 0.4;
         
-        // IMPORTANT: Restart plane detection after reset
         _restartPlaneDetection();
 
+        // Encouraging reset message
         Get.snackbar(
-          "Model dihapus",
-          "Cari permukaan baru untuk menempatkan model",
-          duration: Duration(seconds: 1),
-          backgroundColor: Colors.blue.withOpacity(0.7),
+          "🔄 Siap Coba Lagi!",
+          "Sekarang cari tempat baru untuk hewannya! 🎯",
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.blue.withOpacity(0.8),
           colorText: Colors.white,
           snackPosition: SnackPosition.TOP,
+          borderRadius: 15,
         );
 
+        _updateGuidanceMessage("Ayo cari tempat baru! 📱", "🔍");
         isLoading.value = false;
       });
     } catch (e) {
-      print("Error resetting model: $e");
+      print("Reset error: $e");
       isLoading.value = false;
     }
   }
 
-  // Simplified gesture handling for better performance
+  // Simplified gesture handling for kids
   void onPanStarted(String nodeName) {
-    print("Pan started on node: $nodeName");
-  }
-
-  void onPanChanged(String nodeName) {
-    // Minimal logging for performance
+    print("Kid started moving: $nodeName");
+    SystemChannels.platform.invokeMethod('HapticFeedback.lightImpact');
+    
+    Get.snackbar(
+      "👆 Geser Hewan!",
+      "Seret untuk memindahkan posisi",
+      duration: Duration(milliseconds: 1500),
+      backgroundColor: Colors.purple.withOpacity(0.7),
+      colorText: Colors.white,
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
 
   void onPanEnded(String nodeName, Matrix4 newTransform) {
-    print("Pan ended on node: $nodeName");
-  }
-
-  void _smoothNodeTransform(String nodeName, Matrix4 newTransform) {
-    // Simplified implementation for better performance
+    print("Kid finished moving: $nodeName");
+    SystemChannels.platform.invokeMethod('HapticFeedback.mediumImpact');
   }
 
   void onRotationStarted(String nodeName) {
-    print("Rotation started on node: $nodeName");
-  }
-
-  void onRotationChanged(String nodeName) {
-    // Minimal logging for performance
+    print("Kid started rotating: $nodeName");
+    SystemChannels.platform.invokeMethod('HapticFeedback.lightImpact');
+    
+    Get.snackbar(
+      "🔄 Putar Hewan!",
+      "Putar dengan dua jari",
+      duration: Duration(milliseconds: 1500),
+      backgroundColor: Colors.green.withOpacity(0.7),
+      colorText: Colors.white,
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
 
   void onRotationEnded(String nodeName, Matrix4 newTransform) {
-    print("Rotation ended on node: $nodeName");
+    print("Kid finished rotating: $nodeName");
+    SystemChannels.platform.invokeMethod('HapticFeedback.mediumImpact');
   }
 }

@@ -25,7 +25,7 @@ class AnimalDetailController extends GetxController {
 
   void onViewInAR() {
     audioPlayer.stop();
-    Get.to(() => const CameraPage(), arguments: animal);
+    Get.to(() => const KidFriendlyCameraPage(), arguments: animal);
   }
 
   Future<void> playAnimalSound() async {
