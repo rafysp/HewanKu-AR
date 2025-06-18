@@ -86,7 +86,7 @@ class QuizPage extends StatelessWidget {
                           ),
                         ),
 
-                        // Score indicator with stars - moved to header like habitat quiz
+                        // PERBAIKAN: Score indicator with stars - dengan GetBuilder yang tepat
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -106,7 +106,7 @@ class QuizPage extends StatelessWidget {
                               ),
                               const SizedBox(width: 4),
                               GetBuilder<QuizController>(
-                                id: 'score',
+                                id: 'score', // PERBAIKAN: Gunakan id 'score' yang tepat
                                 builder: (controller) {
                                   return Text(
                                     "${controller.score}/${controller.questions.length}",
@@ -366,7 +366,7 @@ class QuizPage extends StatelessWidget {
 
                                 const SizedBox(height: 30),
 
-                                // Progress dengan emoji - same style as habitat quiz
+                                // PERBAIKAN: Progress dengan emoji - gunakan id yang konsisten
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
@@ -385,7 +385,7 @@ class QuizPage extends StatelessWidget {
                                       ),
                                       const SizedBox(width: 8),
                                       GetBuilder<QuizController>(
-                                        id: 'progress',
+                                        id: 'quiz_body', // PERBAIKAN: Gunakan id yang konsisten
                                         builder: (controller) {
                                           return Text(
                                             "Soal ${controller.currentQuestionIndex + 1} dari ${controller.questions.length}",

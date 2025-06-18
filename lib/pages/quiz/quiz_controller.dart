@@ -65,7 +65,7 @@ class QuizController extends GetxController {
 
   set score(int value) {
     _score = value;
-    update(['quiz_body']);
+    update(['quiz_body', 'score']); // PERBAIKAN: Tambahkan 'score' untuk update UI
   }
 
   bool _isAnswered = false;
@@ -634,7 +634,7 @@ class QuizController extends GetxController {
                   Get.back();
 
                   if (isCorrect) {
-                    score++;
+                    score++; // PERBAIKAN: Ini akan update UI score indicator
                   }
 
                   // Go to next question
@@ -737,7 +737,7 @@ class QuizController extends GetxController {
     }
   }
 
-  // Menampilkan informasi hewan saat jawaban dipilih
+  // PERBAIKAN: Menampilkan informasi hewan saat jawaban dipilih
   void _showAnimalInfoDialog(int selectedIndex) {
     String correctAnswer =
         currentQuestion!.options[currentQuestion!.correctAnswer];
@@ -773,7 +773,7 @@ class QuizController extends GetxController {
           Get.back(); // Menutup dialog
 
           if (isCorrect) {
-            score++;
+            score++; // PERBAIKAN: Ini akan update UI score indicator
           }
 
           // Tunggu dialog menutup sebelum melanjutkan ke pertanyaan berikutnya
@@ -967,7 +967,7 @@ class QuizController extends GetxController {
 
   void resetQuiz() {
     currentQuestionIndex = 0;
-    score = 0;
+    score = 0; // PERBAIKAN: Ini akan update UI score indicator
     // Generate new random questions when resetting
     selectRandomQuestions();
     loadQuestion();
