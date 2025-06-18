@@ -10,6 +10,45 @@ class QuizPage extends StatelessWidget {
   const QuizPage({Key? key, required this.quizType, this.categoryIndex = 0})
     : super(key: key);
 
+  // Helper method for responsive answer box height
+  double _getResponsiveAnswerHeight(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Significantly increased base height for better text accommodation
+    double baseHeight = 120; // Increased from 80 to 120
+
+    // Adjust based on screen size
+    if (screenHeight > 800) {
+      baseHeight = 140; // Taller for large screens
+    } else if (screenHeight > 700) {
+      baseHeight = 130; // Medium-tall screens
+    } else if (screenHeight < 600) {
+      baseHeight =
+          110; // Shorter for small screens but still much taller than original
+    }
+
+    // Adjust for tablet/wide screens
+    if (screenWidth > 600) {
+      baseHeight += 15; // Extra height for tablets
+    }
+
+    return baseHeight;
+  }
+
+  // Helper method for responsive answer font size
+  double _getResponsiveAnswerFontSize(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    if (screenWidth > 600) {
+      return 20; // Larger font for tablets
+    } else if (screenWidth > 400) {
+      return 18; // Default phones
+    } else {
+      return 16; // Smaller phones
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Get.delete<QuizController>(force: true);
@@ -86,7 +125,7 @@ class QuizPage extends StatelessWidget {
                           ),
                         ),
 
-                        // PERBAIKAN: Score indicator with stars - dengan GetBuilder yang tepat
+                        // Score indicator with stars
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -106,7 +145,7 @@ class QuizPage extends StatelessWidget {
                               ),
                               const SizedBox(width: 4),
                               GetBuilder<QuizController>(
-                                id: 'score', // PERBAIKAN: Gunakan id 'score' yang tepat
+                                id: 'score',
                                 builder: (controller) {
                                   return Text(
                                     "${controller.score}/${controller.questions.length}",
@@ -230,7 +269,7 @@ class QuizPage extends StatelessWidget {
 
                                 const SizedBox(height: 20),
 
-                                // Question text dalam balon dialog (without yellow circle)
+                                // Question text dalam balon dialog
                                 if (controller.currentQuestion != null)
                                   Container(
                                     padding: const EdgeInsets.all(20),
@@ -259,7 +298,7 @@ class QuizPage extends StatelessWidget {
 
                                 const SizedBox(height: 30),
 
-                                // Answer options dengan animasi
+                                // Answer options dengan container yang lebih tinggi
                                 if (controller.currentQuestion != null)
                                   Wrap(
                                     spacing: 16,
@@ -283,7 +322,9 @@ class QuizPage extends StatelessWidget {
                                                   ).size.width -
                                                   64) /
                                               2,
-                                          height: 80,
+                                          height: _getResponsiveAnswerHeight(
+                                            context,
+                                          ), // RESPONSIVE HEIGHT - INCREASED
                                           decoration: BoxDecoration(
                                             gradient: _getOptionGradient(
                                               controller,
@@ -333,18 +374,26 @@ class QuizPage extends StatelessWidget {
                                               ),
                                               Center(
                                                 child: Padding(
-                                                  padding: const EdgeInsets.all(
-                                                    8.0,
-                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal:
+                                                            12.0, // Increased horizontal padding
+                                                        vertical: 8.0,
+                                                      ),
                                                   child: Text(
                                                     controller
                                                         .currentQuestion!
                                                         .options[index],
-                                                    style: const TextStyle(
-                                                      fontSize: 18,
+                                                    style: TextStyle(
+                                                      fontSize:
+                                                          _getResponsiveAnswerFontSize(
+                                                            context,
+                                                          ), // RESPONSIVE FONT
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       color: Colors.white,
+                                                      height:
+                                                          1.2, // Better line spacing
                                                       shadows: [
                                                         Shadow(
                                                           offset: Offset(1, 1),
@@ -354,6 +403,10 @@ class QuizPage extends StatelessWidget {
                                                       ],
                                                     ),
                                                     textAlign: TextAlign.center,
+                                                    maxLines:
+                                                        4, // Allow up to 4 lines for longer text
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
                                                   ),
                                                 ),
                                               ),
@@ -366,7 +419,7 @@ class QuizPage extends StatelessWidget {
 
                                 const SizedBox(height: 30),
 
-                                // PERBAIKAN: Progress dengan emoji - gunakan id yang konsisten
+                                // Progress dengan emoji
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
@@ -385,7 +438,7 @@ class QuizPage extends StatelessWidget {
                                       ),
                                       const SizedBox(width: 8),
                                       GetBuilder<QuizController>(
-                                        id: 'quiz_body', // PERBAIKAN: Gunakan id yang konsisten
+                                        id: 'quiz_body',
                                         builder: (controller) {
                                           return Text(
                                             "Soal ${controller.currentQuestionIndex + 1} dari ${controller.questions.length}",

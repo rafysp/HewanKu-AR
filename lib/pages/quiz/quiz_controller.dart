@@ -322,9 +322,9 @@ class QuizController extends GetxController {
   }
 
   void selectRandomQuestions() {
-    // Shuffle all questions and take only 10
+   
     allQuestions.shuffle(_random);
-    questions = allQuestions.take(10).toList();
+    questions = allQuestions.take(5).toList();
   }
 
   void generateAllTebakGambarQuestions() {
