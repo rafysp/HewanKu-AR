@@ -1,5 +1,7 @@
-// pages/home/home_page.dart
+// pages/home/home_page.dart - Modified with Kids-Friendly Bottom Navigation
 import 'package:flutter/material.dart';
+import 'package:flutter_application_2/pages/home/score_history/score_history_page.dart';
+import 'package:flutter_application_2/pages/score_tracking/score_controller.dart';
 import 'package:get/get.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'home_controller.dart';
@@ -72,9 +74,129 @@ class HomePage extends StatelessWidget {
                 isLargeScreen,
               ),
 
-              SizedBox(height: _responsiveHeight(40, screenHeight)),
+              SizedBox(
+                height: _responsiveHeight(100, screenHeight),
+              ), // Extra space for navbar
             ],
           ),
+        ),
+      ),
+
+      // ============ UPDATED: Kids-Friendly Bottom Navigation Bar ============
+      bottomNavigationBar: Container(
+        margin: EdgeInsets.only(
+          bottom: 40, // ← Angkat navbar dari navigasi Android
+        ),
+        child: _buildKidsBottomNavBar(controller, screenWidth, isTablet),
+      ),
+    );
+  }
+
+  // ============ UPDATED: Kids-Friendly Bottom Navigation Bar ============
+  Widget _buildKidsBottomNavBar(
+    HomeController controller,
+    double screenWidth,
+    bool isTablet,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.white, Color(0xFFF8F9FA)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, -8),
+          ),
+        ],
+      ),
+      child: Container(
+        height: isTablet ? 75 : 65, // ← Responsive height
+        padding: EdgeInsets.symmetric(
+          horizontal: _responsiveWidth(24, screenWidth), // ← Responsive padding
+          vertical: isTablet ? 4 : 3, // ← Responsive vertical padding
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            // Home Button (Active dengan warna orange yang konsisten)
+            _buildKidsNavItemReadable(
+              emoji: '🏠',
+              label: 'Beranda',
+              isActive: true, // ← Active di home page
+              color: Colors.orange, // ← Ganti ke orange untuk konsistensi
+              onTap: () {}, // ← Kosong karena sudah di home
+              isTablet: isTablet,
+            ),
+
+            // Score History Button
+            _buildKidsNavItemReadable(
+              emoji: '📚',
+              label: 'Nilai',
+              isActive: false, // ← Tidak active di home page
+              color: Colors.orange, // ← Warna yang sama
+              onTap: () => controller.navigateToScoreHistory(),
+              isTablet: isTablet,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKidsNavItemReadable({
+    required String emoji,
+    required String label,
+    required bool isActive,
+    required Color color,
+    required VoidCallback onTap,
+    required bool isTablet,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: _responsiveWidth(
+            20,
+            MediaQuery.of(Get.context!).size.width,
+          ), // ← Responsive
+          vertical: isTablet ? 5 : 4, // ← Responsive padding
+        ),
+        decoration: BoxDecoration(
+          color: isActive ? color.withOpacity(0.15) : Colors.transparent,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              height: isTablet ? 26 : 22, // ← Responsive emoji container
+              child: Text(
+                emoji,
+                style: TextStyle(
+                  fontSize: isTablet ? 22 : 18,
+                ), // ← Responsive emoji size
+              ),
+            ),
+            SizedBox(height: isTablet ? 3 : 2), // ← Responsive spacing
+            Container(
+              height: isTablet ? 22 : 18, // ← Responsive text container
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: _responsiveFontSize(
+                    14,
+                    MediaQuery.of(Get.context!).size.width,
+                  ), // ← Responsive font
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+                  color: isActive ? color : Colors.grey[700],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

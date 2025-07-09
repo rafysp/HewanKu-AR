@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/pages/onboarding/widgets/cross_painter.dart';
+import 'package:flutter_application_2/pages/home/cross_painter.dart';
 
 class CategoryItem extends StatelessWidget {
   const CategoryItem({Key? key}) : super(key: key);

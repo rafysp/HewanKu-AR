@@ -1,12 +1,13 @@
-// pages/quiz/drag_and_drop_quiz_controller.dart
+// pages/quiz/drag_and_drop_quiz_controller.dart - WITH SCORE INTEGRATION
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/pages/quiz/habitat/model/animalmodel.dart';
 import 'package:flutter_application_2/pages/quiz/habitat/model/habitatmodel.dart';
+import 'package:flutter_application_2/pages/score_tracking/score_controller.dart';
 import 'package:get/get.dart';
 
 class DragAndDropQuizController extends GetxController {
   final List<HabitatModel> habitats = [];
-  final List<AnimalModel> _allAnimals = []; // All 14 animals
+  final List<AnimalModel> _allAnimals = []; // All 15 animals
   final List<AnimalModel> animals = []; // Selected 10 animals for quiz
   final RxMap<String, String> animalToHabitatMap = <String, String>{}.obs;
   final RxInt score = 0.obs;
@@ -17,9 +18,17 @@ class DragAndDropQuizController extends GetxController {
   final RxString currentAnimalHabitat = ''.obs;
   final RxBool isAnswered = false.obs;
 
+  // Score tracking variables
+  final RxInt correctAnswers = 0.obs;
+  final RxInt totalQuestions = 0.obs;
+  final RxInt startTime = 0.obs;
+
+  // Get ScoreController instance
+  late ScoreController scoreController;
+
   // Quiz configuration
-  static const int totalQuestionsToShow = 10;
-  static const int totalAvailableAnimals = 14;
+  static const int totalQuestionsToShow = 5;
+  static const int totalAvailableAnimals = 15;
 
   // Current question getter for compatibility
   AnimalModel? get currentQuestion =>
@@ -30,10 +39,38 @@ class DragAndDropQuizController extends GetxController {
   // Questions getter for compatibility
   List<AnimalModel> get questions => animals;
 
-  DragAndDropQuizController() {
+  @override
+  void onInit() {
+    super.onInit();
+
+    // Initialize ScoreController
+    try {
+      scoreController = Get.find<ScoreController>();
+    } catch (e) {
+      scoreController = Get.put(ScoreController());
+    }
+
+    // Initialize quiz session
+    _initializeQuizSession();
+
     loadHabitats();
     loadAllAnimals();
     shuffleAndSelectAnimals();
+  }
+
+  void _initializeQuizSession() {
+    // Record start time
+    startTime.value = DateTime.now().millisecondsSinceEpoch;
+
+    // Set total questions
+    totalQuestions.value = totalQuestionsToShow;
+    correctAnswers.value = 0;
+    score.value = 0;
+    isQuizCompleted.value = false;
+
+    print(
+      '🎯 Habitat quiz session initialized: ${totalQuestions.value} questions',
+    );
   }
 
   void loadHabitats() {
@@ -58,8 +95,6 @@ class DragAndDropQuizController extends GetxController {
         imagePath: 'assets/habitats/house.png',
         color: Colors.pink.withOpacity(0.7),
       ),
-     
-    
       HabitatModel(
         name: 'Peternakan',
         imagePath: 'assets/habitats/farm.png',
@@ -194,6 +229,7 @@ class DragAndDropQuizController extends GetxController {
 
   // Method to restart quiz with new random selection
   void startNewRandomQuiz() {
+    _initializeQuizSession();
     shuffleAndSelectAnimals();
     resetQuiz();
   }
@@ -214,7 +250,12 @@ class DragAndDropQuizController extends GetxController {
     bool isCorrect = currentQuestion!.habitatId == habitatName;
     if (isCorrect) {
       score.value++;
+      correctAnswers.value++;
     }
+
+    print(
+      '🎯 Answer: ${isCorrect ? "Correct" : "Incorrect"} - Score: ${correctAnswers.value}/${totalQuestions.value}',
+    );
 
     // Wait for dragging animation
     Future.delayed(Duration(milliseconds: 500), () {
@@ -347,6 +388,25 @@ class DragAndDropQuizController extends GetxController {
                 ),
               ),
 
+              const SizedBox(height: 16),
+
+              // Show current progress
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  'Soal ${currentQuestionIndex.value + 1}/${totalQuestions.value} • Benar: ${correctAnswers.value}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[700],
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 20),
 
               // Next button
@@ -380,7 +440,9 @@ class DragAndDropQuizController extends GetxController {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      "Lanjutkan",
+                      currentQuestionIndex.value < animals.length - 1
+                          ? "Lanjutkan"
+                          : "Selesai",
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -389,7 +451,9 @@ class DragAndDropQuizController extends GetxController {
                     ),
                     const SizedBox(width: 8),
                     Icon(
-                      Icons.arrow_forward,
+                      currentQuestionIndex.value < animals.length - 1
+                          ? Icons.arrow_forward
+                          : Icons.check,
                       color: Color.fromRGBO(255, 255, 255, 1.0),
                     ),
                   ],
@@ -412,7 +476,32 @@ class DragAndDropQuizController extends GetxController {
 
   void completeQuiz() {
     isQuizCompleted.value = true;
+
+    // Calculate duration and save score
+    int endTime = DateTime.now().millisecondsSinceEpoch;
+    int durationSeconds = ((endTime - startTime.value) / 1000).round();
+    _saveQuizScore(durationSeconds);
+
     showResultDialog();
+  }
+
+  // Save quiz score to ScoreController
+  void _saveQuizScore(int durationSeconds) {
+    try {
+      scoreController.saveScore(
+        correctAnswers: correctAnswers.value,
+        totalQuestions: totalQuestions.value,
+        category: "Habitat Hewan",
+        quizType: "Drag and Drop",
+        duration: durationSeconds,
+      );
+
+      print(
+        '📊 Habitat quiz score saved: ${correctAnswers.value}/${totalQuestions.value} in ${durationSeconds}s',
+      );
+    } catch (e) {
+      print('❌ Error saving habitat quiz score: $e');
+    }
   }
 
   // Function to assign an animal to a habitat (for multi-animal mode)
@@ -427,17 +516,23 @@ class DragAndDropQuizController extends GetxController {
   }
 
   void checkAllAnswers() {
-    int correctAnswers = 0;
+    int correctAnswersCount = 0;
 
     animalToHabitatMap.forEach((animalId, habitatName) {
       final animal = animals.firstWhere((a) => a.id == animalId);
       if (animal.habitatId == habitatName) {
-        correctAnswers++;
+        correctAnswersCount++;
       }
     });
 
-    score.value = correctAnswers;
+    score.value = correctAnswersCount;
+    correctAnswers.value = correctAnswersCount;
     isQuizCompleted.value = true;
+
+    // Calculate duration and save score
+    int endTime = DateTime.now().millisecondsSinceEpoch;
+    int durationSeconds = ((endTime - startTime.value) / 1000).round();
+    _saveQuizScore(durationSeconds);
 
     showResultDialog();
   }
@@ -448,15 +543,17 @@ class DragAndDropQuizController extends GetxController {
     String message = '';
     Color bgColor = Colors.blue[50]!;
 
-    if (score.value == animals.length) {
+    double percentage = (correctAnswers.value / totalQuestions.value) * 100;
+
+    if (correctAnswers.value == totalQuestions.value) {
       emoji = '🌟🎉';
       message = 'Hebat sekali! Kamu mendapat nilai sempurna!';
       bgColor = Colors.amber[50]!;
-    } else if (score.value >= animals.length * 0.7) {
+    } else if (percentage >= 70) {
       emoji = '😊👏';
       message = 'Bagus! Kamu sudah menguasai banyak habitat hewan!';
       bgColor = Colors.green[50]!;
-    } else if (score.value >= animals.length * 0.4) {
+    } else if (percentage >= 40) {
       emoji = '👍';
       message = 'Coba lagi ya! Kamu pasti bisa lebih baik!';
       bgColor = Colors.orange[50]!;
@@ -525,7 +622,7 @@ class DragAndDropQuizController extends GetxController {
                       child: Icon(
                         Icons.star,
                         color:
-                            index < score.value
+                            index < correctAnswers.value
                                 ? Colors.amber
                                 : Colors.grey[300],
                         size: 30,
@@ -536,11 +633,28 @@ class DragAndDropQuizController extends GetxController {
               ),
               const SizedBox(height: 8),
               Text(
-                'Kamu benar ${score.value} dari ${animals.length}',
+                'Kamu benar ${correctAnswers.value} dari ${totalQuestions.value}',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.blueGrey[600],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Show percentage
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Text(
+                  'Nilai: ${percentage.toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueGrey[700],
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -621,8 +735,7 @@ class DragAndDropQuizController extends GetxController {
           return '💧 Kura-kura suka berenang di air yang tenang. Cangkangnya yang keras melindunginya, dan kakinya seperti dayung untuk berenang!';
         } else if (animalName == 'Ikan Mas') {
           return '💧 Ikan Mas hidup di air tawar yang jernih. Mereka bernapas dengan insang dan berenang dengan sirip yang cantik!';
-        }
-        else if (animalName == 'Kepiting Biru') {
+        } else if (animalName == 'Kepiting Biru') {
           return '🌊 Kepiting Biru suka hidup di laut karena bisa berjalan di dasar laut dengan kaki-kakinya yang kuat dan capit untuk melindungi diri!';
         } else if (animalName == 'Kerang') {
           return '🌊 Kerang tinggal di dasar laut dalam cangkang yang keras. Mereka menyaring air laut untuk mencari makanan kecil-kecil!';
@@ -644,23 +757,18 @@ class DragAndDropQuizController extends GetxController {
       case 'Rumah':
         if (animalName == 'Anjing') {
           return '🏠 Anjing adalah sahabat terbaik manusia! Di rumah, anjing dilindungi, diberi makan, dan bisa bermain dengan keluarga yang menyayanginya!';
+        } else if (animalName == 'Kucing') {
+          return '🏠 Kucing suka tinggal di rumah karena hangat, aman, dan ada keluarga yang merawat mereka dengan baik!';
         } else if (animalName == 'Laba-laba') {
           return '🏠 Laba-laba kecil suka tinggal di sudut-sudut rumah yang tenang. Mereka membuat jaring-jaring cantik untuk menangkap serangga kecil!';
         }
         return '🏠 Tempat tinggal kita yang hangat dan nyaman. Di sini ada keluarga yang sayang dan merawat kita!';
-
 
       case 'Peternakan':
         if (animalName == 'Ayam') {
           return '🚜 Ayam senang di peternakan karena ada kandang yang aman, makanan yang cukup setiap hari, dan bisa berkokok dengan bebas!';
         }
         return '🚜 Tempat yang ramai dengan kandang-kandang. Di sini ada paman dan bibi yang baik yang memberi makan setiap hari!';
-
-      case 'Kutub':
-        return '❄️ Tempat yang dingin banget dengan es dan salju putih. Brrr... butuh bulu tebal supaya tidak kedinginan!';
-
-      case 'Gurun':
-        return '🏜️ Tempat yang panas dan berpasir. Wah, harus pintar cari air dan tempat teduh di sini!';
 
       default:
         return '🌍 Tempat istimewa di mana aku suka tinggal dan bermain dengan teman-teman!';
@@ -670,6 +778,7 @@ class DragAndDropQuizController extends GetxController {
   void resetQuiz() {
     animalToHabitatMap.clear();
     score.value = 0;
+    correctAnswers.value = 0;
     isQuizCompleted.value = false;
     currentQuestionIndex.value = 0;
     currentAnimalHabitat.value = '';
@@ -678,6 +787,27 @@ class DragAndDropQuizController extends GetxController {
   }
 
   void onBackPressed() {
+    // Save current progress if any questions were answered
+    if (correctAnswers.value > 0 || currentQuestionIndex.value > 0) {
+      int endTime = DateTime.now().millisecondsSinceEpoch;
+      int durationSeconds = ((endTime - startTime.value) / 1000).round();
+      _saveQuizScore(durationSeconds);
+    }
+
     Get.back();
+  }
+
+  String _formatDuration(int seconds) {
+    if (seconds < 60) {
+      return '${seconds} detik';
+    } else {
+      int minutes = seconds ~/ 60;
+      int remainingSeconds = seconds % 60;
+      if (remainingSeconds > 0) {
+        return '${minutes}m ${remainingSeconds}d';
+      } else {
+        return '${minutes} menit';
+      }
+    }
   }
 }

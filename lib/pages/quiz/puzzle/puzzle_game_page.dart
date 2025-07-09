@@ -24,9 +24,11 @@ class SimplePuzzlePage extends StatelessWidget {
           child: GetBuilder<SimplePuzzleController>(
             init: SimplePuzzleController(),
             builder: (controller) {
-              return Obx(() => controller.isLoading.value
-                  ? _buildLoadingScreen(controller)
-                  : _buildPuzzleContent(controller)
+              return Obx(
+                () =>
+                    controller.isLoading.value
+                        ? _buildLoadingScreen(controller)
+                        : _buildPuzzleContent(controller),
               );
             },
           ),
@@ -56,10 +58,7 @@ class SimplePuzzlePage extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             'Sedang memotong gambar menjadi puzzle',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
           ),
         ],
       ),
@@ -81,7 +80,7 @@ class SimplePuzzlePage extends StatelessWidget {
                 children: [
                   // Instruction card
                   _buildInstructionCard(controller),
-                  
+
                   const SizedBox(height: 16),
 
                   // Main puzzle area
@@ -89,18 +88,12 @@ class SimplePuzzlePage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Puzzle grid (left side)
-                      Expanded(
-                        flex: 3,
-                        child: _buildPuzzleGrid(controller),
-                      ),
-                      
+                      Expanded(flex: 3, child: _buildPuzzleGrid(controller)),
+
                       const SizedBox(width: 16),
-                      
+
                       // Target preview (right side)
-                      Expanded(
-                        flex: 2,
-                        child: _buildTargetPreview(controller),
-                      ),
+                      Expanded(flex: 2, child: _buildTargetPreview(controller)),
                     ],
                   ),
 
@@ -152,7 +145,7 @@ class SimplePuzzlePage extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,32 +179,68 @@ class SimplePuzzlePage extends StatelessWidget {
           ),
 
           // Score indicator
-          Obx(() => Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: Color.fromRGBO(255, 152, 0, 0.7),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.emoji_events,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  "${controller.score.value}/${controller.animals.length}",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+          Obx(
+            () => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    spreadRadius: 1,
+                    blurRadius: 3,
+                    offset: Offset(0, 2),
                   ),
-                ),
-              ],
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Score dengan bintang
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 20),
+                      const SizedBox(width: 4),
+                      Text(
+                        "${controller.score.value}/${controller.animals.length}",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueGrey,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  // Progress bar untuk puzzle
+                  Container(
+                    width: 80,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor:
+                          controller.animals.isEmpty
+                              ? 0.0
+                              : (controller.currentAnimalIndex.value + 1) /
+                                  controller.animals.length,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.blue, 
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          )),
+          ),
         ],
       ),
     );
@@ -290,11 +319,7 @@ class SimplePuzzlePage extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.lightbulb_outline,
-                      color: Colors.blue,
-                      size: 24,
-                    ),
+                    Icon(Icons.lightbulb_outline, color: Colors.blue, size: 24),
                     Text(
                       'Bantuan',
                       style: TextStyle(
@@ -343,17 +368,10 @@ class SimplePuzzlePage extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Obx(() => Text(
-                'Petunjuk: ${controller.hintsUsed.value}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Color.fromRGBO(117, 117, 117, 1.0),
-                ),
-              )),
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // 2x2 Grid using enhanced widgets
           Container(
             width: 280,
@@ -376,11 +394,15 @@ class SimplePuzzlePage extends StatelessWidget {
     );
   }
 
-  Widget _buildEnhancedGridSlot(SimplePuzzleController controller, int position) {
+  Widget _buildEnhancedGridSlot(
+    SimplePuzzleController controller,
+    int position,
+  ) {
     return Obx(() {
       final piece = controller.getGridPiece(position);
-      final isHighlighted = controller.selectedPieceIndex.value >= 0 && piece == null;
-      
+      final isHighlighted =
+          controller.selectedPieceIndex.value >= 0 && piece == null;
+
       return EnhancedPuzzleSlotWidget(
         piece: piece,
         size: 130,
@@ -440,10 +462,11 @@ class SimplePuzzlePage extends StatelessWidget {
                     color: Colors.grey[200],
                     child: Center(
                       child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                            : null,
+                        value:
+                            loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
                         strokeWidth: 3,
                         color: Colors.blue,
                       ),
@@ -456,11 +479,7 @@ class SimplePuzzlePage extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.pets,
-                          size: 60,
-                          color: Colors.grey,
-                        ),
+                        Icon(Icons.pets, size: 60, color: Colors.grey),
                         SizedBox(height: 8),
                         Text(
                           controller.currentAnimal.name,
@@ -550,7 +569,9 @@ class SimplePuzzlePage extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: controller.currentAnimal.themeColor.withOpacity(0.2),
+                        color: controller.currentAnimal.themeColor.withOpacity(
+                          0.2,
+                        ),
                         shape: BoxShape.circle,
                       ),
                       child: Text('🧩', style: TextStyle(fontSize: 20)),
@@ -581,13 +602,6 @@ class SimplePuzzlePage extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      "Petunjuk: ${controller.hintsUsed.value}",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color.fromRGBO(117, 117, 117, 1.0),
-                      ),
-                    ),
                     SizedBox(height: 4),
                     Row(
                       mainAxisSize: MainAxisSize.min,
@@ -599,9 +613,10 @@ class SimplePuzzlePage extends StatelessWidget {
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: i < controller.availablePieces.length 
-                                  ? Colors.orange 
-                                  : Colors.green,
+                              color:
+                                  i < controller.availablePieces.length
+                                      ? Colors.orange
+                                      : Colors.green,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -641,92 +656,73 @@ class SimplePuzzlePage extends StatelessWidget {
                 ),
               ),
             ),
-            
-            const SizedBox(width: 8),
-            
-            // Shuffle animals button
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => controller.shuffleAnimals(),
-                icon: Icon(Icons.shuffle, color: Colors.white),
-                label: Text(
-                  'Acak',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple[600],
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-              ),
-            ),
-            
-            const SizedBox(width: 8),
-            
+
             // Previous animal button
-            Expanded(
-              child: Obx(() => ElevatedButton.icon(
-                onPressed: controller.currentAnimalIndex.value > 0 
-                    ? () {
-                        controller.currentAnimalIndex.value--;
-                        controller.initializePuzzle();
-                      }
-                    : null,
-                icon: Icon(Icons.arrow_back, color: Colors.white),
-                label: Text(
-                  'Sebelumnya',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: controller.currentAnimalIndex.value > 0 
-                      ? Colors.blue 
-                      : Colors.grey,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-              )),
-            ),
-            
-            const SizedBox(width: 8),
-            
+            // Expanded(
+            //   child: Obx(
+            //     () => ElevatedButton.icon(
+            //       onPressed:
+            //           controller.currentAnimalIndex.value > 0
+            //               ? () {
+            //                 controller.currentAnimalIndex.value--;
+            //                 controller.initializePuzzle();
+            //               }
+            //               : null,
+            //       icon: Icon(Icons.arrow_back, color: Colors.white),
+            //       label: Text(
+            //         'Sebelumnya',
+            //         style: TextStyle(
+            //           fontSize: 12,
+            //           fontWeight: FontWeight.bold,
+            //           color: Colors.white,
+            //         ),
+            //       ),
+            //       style: ElevatedButton.styleFrom(
+            //         backgroundColor:
+            //             controller.currentAnimalIndex.value > 0
+            //                 ? Colors.blue
+            //                 : Colors.grey,
+            //         padding: const EdgeInsets.symmetric(vertical: 12),
+            //         shape: RoundedRectangleBorder(
+            //           borderRadius: BorderRadius.circular(15),
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            // ),
+
             // Next animal button
-            Expanded(
-              child: Obx(() => ElevatedButton.icon(
-                onPressed: controller.currentAnimalIndex.value < controller.animals.length - 1 
-                    ? () => controller.nextPuzzle()
-                    : null,
-                icon: Icon(Icons.arrow_forward, color: Colors.white),
-                label: Text(
-                  'Berikutnya',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: controller.currentAnimalIndex.value < controller.animals.length - 1 
-                      ? Colors.green 
-                      : Colors.grey,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-              )),
-            ),
+            // Expanded(
+            //   child: Obx(
+            //     () => ElevatedButton.icon(
+            //       onPressed:
+            //           controller.currentAnimalIndex.value <
+            //                   controller.animals.length - 1
+            //               ? () => controller.nextPuzzle()
+            //               : null,
+            //       icon: Icon(Icons.arrow_forward, color: Colors.white),
+            //       label: Text(
+            //         'Berikutnya',
+            //         style: TextStyle(
+            //           fontSize: 12,
+            //           fontWeight: FontWeight.bold,
+            //           color: Colors.white,
+            //         ),
+            //       ),
+            //       style: ElevatedButton.styleFrom(
+            //         backgroundColor:
+            //             controller.currentAnimalIndex.value <
+            //                     controller.animals.length - 1
+            //                 ? Colors.green
+            //                 : Colors.grey,
+            //         padding: const EdgeInsets.symmetric(vertical: 12),
+            //         shape: RoundedRectangleBorder(
+            //           borderRadius: BorderRadius.circular(15),
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ],

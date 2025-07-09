@@ -1,11 +1,22 @@
-// controllers/simple_puzzle_controller.dart - COMPLETELY FIXED VERSION
+// controllers/simple_puzzle_controller.dart - COMPLETELY FIXED VERSION WITH SCORE INTEGRATION
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/pages/quiz/puzzle/model/puzzle_model.dart';
 import 'package:flutter_application_2/pages/quiz/puzzle/services/image_cropper.dart';
+import 'package:flutter_application_2/pages/score_tracking/score_controller.dart';
 import 'package:get/get.dart';
 import 'dart:ui' as ui;
 
+// Import score system
+
 class SimplePuzzleController extends GetxController {
+  // Score system integration
+  late final ScoreController scoreController;
+
+  // Timing untuk score calculation
+  final RxInt startTime = 0.obs;
+  final RxInt puzzleStartTime = 0.obs;
+  final RxBool isScoreSaved = false.obs;
+
   // Observable variables
   final RxList<PuzzlePiece> allPieces = <PuzzlePiece>[].obs;
   final RxList<PuzzlePiece> availablePieces = <PuzzlePiece>[].obs;
@@ -16,6 +27,19 @@ class SimplePuzzleController extends GetxController {
   final RxBool isPuzzleCompleted = false.obs;
   final RxBool isLoading = false.obs;
   final RxInt hintsUsed = 0.obs;
+
+  // Score tracking untuk current session
+  final RxInt correctPlacements = 0.obs;
+  final RxInt totalAttempts = 0.obs;
+  final RxInt incorrectAttempts = 0.obs;
+  final RxInt globalTotalAttempts = 0.obs;
+  final RxInt globalIncorrectAttempts = 0.obs;
+  final RxInt globalCorrectPlacements = 0.obs;
+  final RxInt puzzleTotalAttempts = 0.obs;
+  final RxInt puzzleIncorrectAttempts = 0.obs;
+  final RxInt puzzleCorrectPlacements = 0.obs;
+
+  final RxInt globalHintsUsed = 0.obs;
 
   // Animal data - 15 hewan dari data vertebrata dan invertebrata
   final List<PuzzleAnimal> allAnimals = [
@@ -317,6 +341,27 @@ class SimplePuzzleController extends GetxController {
         'Kaki tabung bintang laut membantu bergerak dan menangkap makanan',
       ],
     ),
+    PuzzleAnimal(
+      name: 'Cumi-cumi',
+      fullImagePath:
+          'https://qrxebmffwenduztunlbk.supabase.co/storage/v1/object/public/Image/squid.png',
+      sound: 'Swoosh!',
+      animalDescription:
+          'Cumi-cumi adalah moluska cephalopoda yang memiliki tentakel dan tubuh lunak.',
+      themeColor: Colors.purple[600]!,
+      learningFacts: [
+        'Cumi-cumi dapat mengubah warna kulit untuk berkamuflase',
+        'Cumi-cumi memiliki otak yang sangat cerdas',
+        'Cumi-cumi dapat berenang cepat dengan mengeluarkan air dari tubuhnya',
+      ],
+      pieceNames: ['Kepala', 'Tentakel', 'Badan', 'Sirip'],
+      pieceDescriptions: [
+        'Kepala cumi-cumi memiliki mata besar dan mulut dengan paruh keras',
+        'Tentakel cumi-cumi digunakan untuk menangkap mangsa dan bergerak',
+        'Badan cumi-cumi lunak dan fleksibel, memungkinkan mereka berenang cepat',
+        'Sirip cumi-cumi membantu mengarahkan saat berenang di dalam air',
+      ],
+    ),
   ];
 
   // Randomly selected animals for current session
@@ -345,16 +390,43 @@ class SimplePuzzleController extends GetxController {
   void onInit() {
     super.onInit();
 
+    // Initialize score controller
+    scoreController = Get.find<ScoreController>();
+
+    // Record start time for overall session
+    startTime.value = DateTime.now().millisecondsSinceEpoch;
+
     // Randomize animals selection every time controller is initialized
     _randomizeAnimals();
 
     // Initialize grid with safe values
     _initializeEmptyGrid();
 
+    // Initialize score tracking
+    _initializeScoreTracking();
+
     // Delay initialization to avoid build conflicts
     WidgetsBinding.instance.addPostFrameCallback((_) {
       initializePuzzle();
     });
+  }
+
+  void _initializeScoreTracking() {
+    _initializePuzzleTracking(); // Hanya reset per-puzzle, bukan global
+  }
+
+  void _initializeGlobalTracking() {
+    globalTotalAttempts.value = 0;
+    globalIncorrectAttempts.value = 0;
+    globalCorrectPlacements.value = 0;
+    globalHintsUsed.value = 0;
+  }
+
+  void _initializePuzzleTracking() {
+    puzzleTotalAttempts.value = 0;
+    puzzleIncorrectAttempts.value = 0;
+    puzzleCorrectPlacements.value = 0;
+    puzzleStartTime.value = DateTime.now().millisecondsSinceEpoch;
   }
 
   void _randomizeAnimals() {
@@ -446,6 +518,9 @@ class SimplePuzzleController extends GetxController {
 
       // Reset completion state
       isPuzzleCompleted.value = false;
+
+      // Reset score tracking for new puzzle
+      _initializeScoreTracking();
 
       isLoading.value = true;
       selectedPieceIndex.value = -1;
@@ -816,6 +891,38 @@ class SimplePuzzleController extends GetxController {
     return animals.isNotEmpty ? animals.first : allAnimals.first;
   }
 
+  String _getEfficiencyLevel(double efficiency) {
+    if (efficiency >= 90) return "Master 🌟";
+    if (efficiency >= 80) return "Expert 👏";
+    if (efficiency >= 70) return "Good 👍";
+    if (efficiency >= 60) return "Average 😊";
+    return "Needs Practice 💪";
+  }
+
+  void _logEfficiencyState(String attemptType) {
+    print('');
+    print('═══════════════════════════════════════');
+    print('📊 EFFICIENCY STATE - $attemptType');
+    print('═══════════════════════════════════════');
+    print('🎯 Current Performance:');
+    print('   - Completed puzzles: ${score.value}/${animals.length}');
+    print('   - Total attempts: ${totalAttempts.value}');
+    print('   - Correct placements: ${correctPlacements.value}');
+    print('   - Incorrect attempts: ${incorrectAttempts.value}');
+    print('   - Hints used: ${hintsUsed.value}');
+
+    if (totalAttempts.value > 0) {
+      double efficiency = (correctPlacements.value / totalAttempts.value) * 100;
+      double errorRate = (incorrectAttempts.value / totalAttempts.value) * 100;
+      print('📈 Efficiency Metrics:');
+      print('   - Success rate: ${efficiency.toStringAsFixed(1)}%');
+      print('   - Error rate: ${errorRate.toStringAsFixed(1)}%');
+      print('   - Efficiency level: ${_getEfficiencyLevel(efficiency)}');
+    }
+    print('═══════════════════════════════════════');
+    print('');
+  }
+
   void selectPiece(int index) {
     print('Attempting to select piece at index: $index');
 
@@ -846,7 +953,7 @@ class SimplePuzzleController extends GetxController {
   }
 
   void placePiece(int gridPosition) {
-    print('Attempting to place piece at grid position: $gridPosition');
+    print('🎯 Attempting to place piece at grid position: $gridPosition');
 
     // ULTRA SAFE: Comprehensive validation
     if (selectedPieceIndex.value == -1) {
@@ -877,14 +984,8 @@ class SimplePuzzleController extends GetxController {
       return;
     }
 
-    // Check if grid position is already occupied
-    final existingPiece = getGridPiece(gridPosition);
-    if (existingPiece != null) {
-      _showHint("Tempat sudah terisi! Pilih tempat yang kosong.");
-      return;
-    }
-
     try {
+      // Get the selected piece first
       final selectedPiece = getAvailablePiece(selectedPieceIndex.value);
       if (selectedPiece == null) {
         print('Selected piece is null');
@@ -893,26 +994,73 @@ class SimplePuzzleController extends GetxController {
         return;
       }
 
+      // Check if grid position is already occupied
+      final existingPiece = getGridPiece(gridPosition);
+      if (existingPiece != null) {
+        // TYPE 1: OCCUPIED SPOT ATTEMPT - Count as inefficiency
+        puzzleTotalAttempts.value++;
+        globalTotalAttempts.value++;
+
+        puzzleIncorrectAttempts.value++;
+        globalIncorrectAttempts.value++;
+
+        print('❌ OCCUPIED SPOT - Wrong attempt');
+        print(
+          '📊 Puzzle Stats: Total: ${puzzleTotalAttempts.value}, Wrong: ${puzzleIncorrectAttempts.value}',
+        );
+        print(
+          '📊 Global Stats: Total: ${globalTotalAttempts.value}, Wrong: ${globalIncorrectAttempts.value}',
+        );
+
+        _showHint("Tempat sudah terisi! Pilih tempat yang kosong.");
+        return;
+      }
+
+      // Track ALL placement attempts (BOTH per-puzzle AND global)
+      puzzleTotalAttempts.value++;
+      globalTotalAttempts.value++;
+
+      // Check if placement is correct
       bool isCorrect = selectedPiece.correctPosition == gridPosition;
 
       print(
-        'Placing piece: ${selectedPiece.pieceName} at position $gridPosition (correct: ${selectedPiece.correctPosition})',
+        '🔍 Placement: ${selectedPiece.pieceName} → Position $gridPosition (correct: ${selectedPiece.correctPosition})',
       );
 
       if (isCorrect) {
-        // Place piece correctly
+        // TYPE 2: CORRECT PLACEMENT - Progress the game
+        puzzleCorrectPlacements.value++;
+        globalCorrectPlacements.value++;
+
+        print('✅ CORRECT PLACEMENT');
+        print(
+          '📊 Puzzle Progress: ${puzzleCorrectPlacements.value} correct placements',
+        );
+        print(
+          '📊 Global Progress: ${globalCorrectPlacements.value} correct placements',
+        );
+
         PuzzlePiece placedPiece = selectedPiece.copyWith(isPlaced: true);
 
         if (!setGridPiece(gridPosition, placedPiece)) {
           print('Failed to set grid piece');
+          // Rollback counters if placement fails
+          puzzleTotalAttempts.value--;
+          globalTotalAttempts.value--;
+          puzzleCorrectPlacements.value--;
+          globalCorrectPlacements.value--;
           _showError('Gagal menempatkan bagian');
           return;
         }
 
         if (!removeAvailablePiece(selectedPieceIndex.value)) {
           print('Failed to remove available piece');
-          // Try to recover by clearing the grid position
+          // Rollback everything if removal fails
           setGridPiece(gridPosition, null);
+          puzzleTotalAttempts.value--;
+          globalTotalAttempts.value--;
+          puzzleCorrectPlacements.value--;
+          globalCorrectPlacements.value--;
           _showError('Gagal menghapus bagian dari daftar');
           return;
         }
@@ -920,16 +1068,36 @@ class SimplePuzzleController extends GetxController {
         selectedPieceIndex.value = -1;
         _showCorrectFeedback(selectedPiece);
 
-        // Delay completion check
+        // Check completion
         Future.delayed(Duration(milliseconds: 200), () {
           _checkPuzzleCompletion();
         });
       } else {
+        // TYPE 3: WRONG POSITION ATTEMPT - Count as inefficiency
+        puzzleIncorrectAttempts.value++;
+        globalIncorrectAttempts.value++;
+
+        print('❌ WRONG POSITION - Wrong attempt');
+        print(
+          '📊 Puzzle Stats: Total: ${puzzleTotalAttempts.value}, Wrong: ${puzzleIncorrectAttempts.value}',
+        );
+        print(
+          '📊 Global Stats: Total: ${globalTotalAttempts.value}, Wrong: ${globalIncorrectAttempts.value}',
+        );
+
         _showIncorrectFeedback(selectedPiece, gridPosition);
         selectedPieceIndex.value = -1;
       }
+
+      // Log current efficiency after each attempt
+      _logCurrentEfficiency();
     } catch (e) {
-      print('Error placing piece: $e');
+      print('❌ Error placing piece: $e');
+      // Rollback counters on error
+      if (puzzleTotalAttempts.value > 0) {
+        puzzleTotalAttempts.value--;
+        globalTotalAttempts.value--;
+      }
       selectedPieceIndex.value = -1;
       _showError('Terjadi kesalahan saat menempatkan bagian.');
     }
@@ -1075,6 +1243,114 @@ class SimplePuzzleController extends GetxController {
     }
   }
 
+  int _calculateDisplayScore() {
+    int baseScore = 70; // Base score for completion
+
+    if (globalTotalAttempts.value == 0) return baseScore;
+
+    // Efficiency calculation menggunakan global stats
+    double efficiency =
+        globalCorrectPlacements.value / globalTotalAttempts.value;
+    int efficiencyScore = (efficiency * 30).round();
+
+    // Penalty menggunakan global stats
+    int hintPenalty = globalHintsUsed.value * 2;
+    int excessAttemptsPenalty = _calculateExcessAttemptsPenalty();
+    int timePenalty = _calculateTimePenalty();
+
+    int finalScore = (baseScore +
+            efficiencyScore -
+            hintPenalty -
+            excessAttemptsPenalty -
+            timePenalty)
+        .clamp(0, 100);
+
+    print('📊 Global Efficiency Score Calculation:');
+    print('   - Base completion score: $baseScore');
+    print('   - Efficiency score: $efficiencyScore');
+    print(
+      '   - Global efficiency rate: ${(efficiency * 100).toStringAsFixed(1)}%',
+    );
+    print('   - Global hint penalty: -$hintPenalty');
+    print('   - Final score: $finalScore/100');
+
+    return finalScore;
+  }
+
+  int _calculateExcessAttemptsPenalty() {
+    int expectedAttempts = globalCorrectPlacements.value;
+    int actualAttempts = globalTotalAttempts.value;
+    int excessAttempts = actualAttempts - expectedAttempts;
+
+    if (excessAttempts <= 0) return 0;
+    return (excessAttempts / 2).floor();
+  }
+
+  int _calculateTimePenalty() {
+    int duration = getCurrentDuration();
+    int expectedTime = score.value * 60; // 1 minute per puzzle
+
+    if (duration <= expectedTime) return 0;
+
+    // Penalty: 1 point per extra minute
+    return ((duration - expectedTime) / 60).floor();
+  }
+
+  void _logCurrentEfficiency() {
+    if (globalTotalAttempts.value == 0) return;
+
+    double efficiency =
+        (globalCorrectPlacements.value / globalTotalAttempts.value) * 100;
+    String level = _getEfficiencyLevel(efficiency);
+
+    print('📈 Global Efficiency: ${efficiency.toStringAsFixed(1)}% ($level)');
+    print(
+      '   Global Correct: ${globalCorrectPlacements.value}, Total: ${globalTotalAttempts.value}, Wrong: ${globalIncorrectAttempts.value}',
+    );
+  }
+
+  // Calculate final score based on performance
+  int _calculateFinalScore() {
+    // Use the new efficiency-based calculation
+    return _calculateDisplayScore();
+  }
+
+  // Save score to score system
+  // REPLACE: Save score - Single save with protection
+  Future<void> _saveScoreToSystem() async {
+    if (isScoreSaved.value) {
+      print('💾 Score already saved, skipping...');
+      return;
+    }
+
+    try {
+      isScoreSaved.value = true;
+
+      int currentTime = DateTime.now().millisecondsSinceEpoch;
+      int duration = ((currentTime - startTime.value) / 1000).round();
+
+      print('💾 Saving puzzle score (GLOBAL TRACKING):');
+      print('  - Completed puzzles: ${score.value}/${animals.length}');
+      print('  - Global wrong attempts: ${globalIncorrectAttempts.value}');
+      print('  - Global hints used: ${globalHintsUsed.value}');
+      print('  - Global total attempts: ${globalTotalAttempts.value}');
+      print('  - Duration: ${duration}s');
+
+      await scoreController.saveScore(
+        correctAnswers: score.value,
+        totalQuestions: animals.length,
+        category: 'Puzzle Hewan',
+        quizType: 'Interactive Puzzle',
+        duration: duration,
+      );
+
+      print('✅ Score saved successfully!');
+    } catch (e) {
+      print('❌ Error saving score: $e');
+      isScoreSaved.value = false;
+    }
+  }
+
   void _showCompletionDialog() {
     // Make sure no other dialogs are open
     _clearExistingDialogs();
@@ -1108,18 +1384,50 @@ class SimplePuzzleController extends GetxController {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
+
+              // SOLUSI 1: Gunakan Column untuk teks panjang
               Row(
                 children: [
+                  // TOMBOL KIRI: Main Lagi
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        // Force close all dialogs
                         Get.until((route) => !Get.isDialogOpen!);
-
-                        // Reset completion state
                         isPuzzleCompleted.value = false;
+                        Future.delayed(Duration(milliseconds: 200), () {
+                          resetCurrentPuzzle();
+                        });
+                      },
+                      icon: Icon(Icons.refresh, color: Colors.white, size: 18),
+                      label: const Text(
+                        'Main Lagi',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                          horizontal: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                    ),
+                  ),
 
-                        // Proceed to next puzzle with delay
+                  const SizedBox(width: 12),
+
+                  // TOMBOL KANAN: Hewan Berikutnya dengan layout yang diperbaiki
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.until((route) => !Get.isDialogOpen!);
+                        isPuzzleCompleted.value = false;
                         Future.delayed(Duration(milliseconds: 200), () {
                           if (currentAnimalIndex.value < animals.length - 1) {
                             nextPuzzle();
@@ -1128,56 +1436,38 @@ class SimplePuzzleController extends GetxController {
                           }
                         });
                       },
-                      icon: Icon(Icons.arrow_forward, color: Colors.white),
-                      label: Text(
-                        currentAnimalIndex.value < animals.length - 1
-                            ? 'Hewan Berikutnya'
-                            : 'Selesai',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 8,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        // Force close all dialogs
-                        Get.until((route) => !Get.isDialogOpen!);
-
-                        // Reset completion state
-                        isPuzzleCompleted.value = false;
-
-                        // Reset puzzle with delay
-                        Future.delayed(Duration(milliseconds: 200), () {
-                          resetCurrentPuzzle();
-                        });
-                      },
-                      icon: Icon(Icons.refresh, color: Colors.white),
-                      label: const Text(
-                        'Main Lagi',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            currentAnimalIndex.value < animals.length - 1
+                                ? 'Hewan\nBerikutnya'
+                                : 'Selesai',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              height: 1.1, // Line height yang lebih rapat
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -1193,6 +1483,21 @@ class SimplePuzzleController extends GetxController {
   }
 
   void _showFinalCompletion() {
+    if (!isScoreSaved.value) {
+      _saveScoreToSystem();
+    }
+
+    // BENAR: Menggunakan GLOBAL tracking
+    int finalScore = _calculateDisplayScore();
+    double efficiency =
+        globalTotalAttempts.value > 0
+            ? (globalCorrectPlacements.value /
+                globalTotalAttempts.value *
+                100) // ← GLOBAL TRACKING
+            : 100.0;
+    int totalPiecesPlaced = globalCorrectPlacements.value; // ← GLOBAL TRACKING
+    int expectedPieces = animals.length * 2;
+
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
@@ -1217,37 +1522,183 @@ class SimplePuzzleController extends GetxController {
               ),
               const SizedBox(height: 8),
               Text(
-                'Kamu sudah melengkapi semua ${animals.length} puzzle hewan!\nSkor akhir: ${score.value}/${animals.length}',
+                'Kamu berhasil menyelesaikan semua ${animals.length} puzzle hewan!',
                 style: TextStyle(fontSize: 16, color: Colors.amber[700]),
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 16),
+
+              // Container dengan statistik GLOBAL
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.amber[100],
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.amber[300]!, width: 2),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Analisis Performa Global:',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber[800],
+                      ),
+                    ),
+                    SizedBox(height: 12),
+
+                    // BENAR: Menggunakan GLOBAL tracking
+                    _buildEfficiencyRow(
+                      'Puzzle Selesai:',
+                      '${score.value}/${animals.length} hewan 🎉',
+                      Icons.check_circle,
+                    ),
+                    _buildEfficiencyRow(
+                      'Percobaan Benar:',
+                      '$totalPiecesPlaced/$expectedPieces bagian ✅',
+                      Icons.extension,
+                    ),
+                    _buildEfficiencyRow(
+                      'Total Coba:',
+                      '${globalTotalAttempts.value} kali',
+                      Icons.touch_app,
+                    ), // ← GLOBAL
+                    _buildEfficiencyRow(
+                      'Percobaan Salah:',
+                      '${globalIncorrectAttempts.value} kali',
+                      Icons.error_outline,
+                    ), // ← GLOBAL
+
+                    _buildEfficiencyRow(
+                      'Waktu Main:',
+                      '${_formatDurationForKids(getCurrentDuration())}',
+                      Icons.timer,
+                    ),
+
+                    Divider(color: Colors.amber[400], thickness: 2, height: 20),
+
+                    // Performance level indicator
+                    Container(
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _getPerformanceColor(efficiency),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.emoji_events,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Level: ${_getEfficiencyLevel(efficiency)}',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Skor Akhir: $finalScore/100',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 8),
+
+                    Text(
+                      _getEfficiencyMessage(efficiency),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.amber[700],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+
               const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Get.back(); // Close dialog first
-                  Future.delayed(Duration(milliseconds: 100), () {
-                    resetAllPuzzles();
-                  });
-                },
-                icon: Icon(Icons.refresh, color: Colors.white),
-                label: const Text(
-                  'Main Semua Lagi',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Get.back();
+                        Future.delayed(Duration(milliseconds: 100), () {
+                          resetAllPuzzles();
+                        });
+                      },
+                      icon: Icon(Icons.refresh, color: Colors.white),
+                      label: const Text(
+                        'Coba Lagi',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 24,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Get.back();
+                        Future.delayed(Duration(milliseconds: 100), () {
+                          Get.back();
+                        });
+                      },
+                      icon: Icon(Icons.home, color: Colors.white),
+                      label: const Text(
+                        'Selesai',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
+                ],
               ),
             ],
           ),
@@ -1257,12 +1708,50 @@ class SimplePuzzleController extends GetxController {
     );
   }
 
+  Widget _buildEfficiencyRow(String label, String value, IconData icon) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.amber[700]),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 14, color: Colors.amber[700]),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.amber[800],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getPerformanceColor(double efficiency) {
+    if (efficiency >= 90) return Colors.green[600]!;
+    if (efficiency >= 80) return Colors.blue[600]!;
+    if (efficiency >= 70) return Colors.orange[600]!;
+    if (efficiency >= 60) return Colors.amber[600]!;
+    return Colors.red[600]!;
+  }
+
+  String _getEfficiencyMessage(double efficiency) {
+    if (efficiency >= 90) return "Luar biasa! Kamu sangat pintar! 🌟⭐✨";
+    if (efficiency >= 80) return "Hebat! Kamu hampir tidak salah! 👏🎉";
+    if (efficiency >= 70) return "Bagus! Kamu bisa lebih baik lagi! 👍😊";
+    if (efficiency >= 60) return "Baik! Terus berlatih ya! 😊📚";
+    return "Semangat! Kamu pasti bisa! 💪🚀";
+  }
+
   void showHint() {
     try {
-      print(
-        'Showing hint - selectedPieceIndex: ${selectedPieceIndex.value}, availablePieces.length: ${availablePieces.length}',
-      );
-
       if (selectedPieceIndex.value >= 0 &&
           selectedPieceIndex.value < availablePieces.length &&
           availablePieces.isNotEmpty) {
@@ -1273,8 +1762,6 @@ class SimplePuzzleController extends GetxController {
         }
 
         int correctPosition = selectedPiece.correctPosition;
-
-        // ULTRA SAFE: Validate correct position
         if (correctPosition < 0 || correctPosition >= 4) {
           _showHint("Posisi bagian tidak valid!");
           return;
@@ -1283,7 +1770,10 @@ class SimplePuzzleController extends GetxController {
         String hintMessage =
             "Petunjuk: ${selectedPiece.pieceName} cocok untuk posisi ${_getPositionName(correctPosition)}. ${selectedPiece.description}";
         _showHint(hintMessage);
+
+        // Track hints in both counters
         hintsUsed.value++;
+        globalHintsUsed.value++;
       } else {
         _showHint(
           "Pilih bagian tubuh terlebih dahulu untuk mendapat petunjuk!",
@@ -1347,8 +1837,12 @@ class SimplePuzzleController extends GetxController {
 
   void resetCurrentPuzzle() {
     try {
-      _clearExistingDialogs(); // Clear any existing dialogs first
-      print('Resetting current puzzle');
+      _clearExistingDialogs();
+      print('Resetting current puzzle (keeping global tracking)');
+
+      // Reset hanya per-puzzle tracking
+      _initializePuzzleTracking();
+
       initializePuzzle();
     } catch (e) {
       print('Error resetting puzzle: $e');
@@ -1358,13 +1852,17 @@ class SimplePuzzleController extends GetxController {
 
   void resetAllPuzzles() {
     try {
-      _clearExistingDialogs(); // Clear any existing dialogs first
+      _clearExistingDialogs();
       print('Resetting all puzzles with new randomization...');
 
-      // Re-randomize animals for a fresh experience
-      _randomizeAnimals();
+      // Reset semua tracking termasuk global
+      score.value = 0;
+      _initializeGlobalTracking(); // Reset global tracking
+      _initializePuzzleTracking(); // Reset per-puzzle tracking
+      isScoreSaved.value = false;
+      startTime.value = DateTime.now().millisecondsSinceEpoch;
 
-      // Initialize first puzzle
+      _randomizeAnimals();
       initializePuzzle();
     } catch (e) {
       print('Error resetting all puzzles: $e');
@@ -1372,8 +1870,27 @@ class SimplePuzzleController extends GetxController {
     }
   }
 
+  String _formatDurationForKids(int seconds) {
+    if (seconds < 60) {
+      return '$seconds detik';
+    } else if (seconds < 3600) {
+      int minutes = seconds ~/ 60;
+      int remainingSeconds = seconds % 60;
+      if (remainingSeconds == 0) {
+        return '$minutes menit';
+      } else {
+        return '$minutes menit $remainingSeconds detik';
+      }
+    } else {
+      int hours = seconds ~/ 3600;
+      int remainingMinutes = (seconds % 3600) ~/ 60;
+      return '$hours jam $remainingMinutes menit';
+    }
+  }
+
   void onBackPressed() {
     try {
+      // Don't auto-save on back - only save on completion
       Get.back();
     } catch (e) {
       print('Error going back: $e');
@@ -1384,6 +1901,15 @@ class SimplePuzzleController extends GetxController {
   void shuffleAnimals() {
     try {
       print('🎲 Manually shuffling animals...');
+
+      // Reset score tracking
+      score.value = 0;
+      correctPlacements.value = 0;
+      totalAttempts.value = 0;
+      incorrectAttempts.value = 0;
+      hintsUsed.value = 0;
+      startTime.value = DateTime.now().millisecondsSinceEpoch;
+
       _randomizeAnimals();
       initializePuzzle();
     } catch (e) {
@@ -1448,5 +1974,69 @@ class SimplePuzzleController extends GetxController {
   // Get current session animals count
   int getSessionAnimalsCount() {
     return animals.length;
+  }
+
+  // Score system getter methods
+  double getCurrentAccuracy() {
+    if (globalTotalAttempts.value == 0) return 0.0;
+    return (globalCorrectPlacements.value / globalTotalAttempts.value * 100);
+  }
+
+  String getScoreStatistics() {
+    if (globalTotalAttempts.value == 0) {
+      return 'Puzzle: ${score.value}/${animals.length} | Belum ada percobaan';
+    }
+
+    double efficiency =
+        (globalCorrectPlacements.value / globalTotalAttempts.value) * 100;
+    int currentScore = _calculateDisplayScore();
+
+    return 'Puzzle: ${score.value}/${animals.length} | Efisiensi: ${efficiency.toStringAsFixed(1)}% | Salah: ${globalIncorrectAttempts.value} | Score: $currentScore';
+  }
+
+  String getDetailedStats() {
+    if (globalTotalAttempts.value == 0) {
+      return 'Belum ada percobaan';
+    }
+
+    double efficiency =
+        (globalCorrectPlacements.value / globalTotalAttempts.value) * 100;
+    return 'Global: ${globalTotalAttempts.value} attempts | ✅${globalCorrectPlacements.value} | ❌${globalIncorrectAttempts.value} | 💡${globalHintsUsed.value} | Efficiency: ${efficiency.toStringAsFixed(1)}%';
+  }
+
+  int getEstimatedScore() {
+    return _calculateFinalScore();
+  }
+
+  // Method to manually save score (for testing or early exit)
+  Future<void> saveCurrentScore() async {
+    await _saveScoreToSystem();
+  }
+
+  // Method to get current game duration in seconds
+  int getCurrentDuration() {
+    return ((DateTime.now().millisecondsSinceEpoch - startTime.value) / 1000)
+        .round();
+  }
+
+  // Method to get progress percentage
+  double getProgress() {
+    if (animals.isEmpty) return 0.0;
+    return (currentAnimalIndex.value + (availablePieces.isEmpty ? 1 : 0)) /
+        animals.length;
+  }
+
+  // Method to get detailed progress info
+  String getProgressInfo() {
+    int completed =
+        currentAnimalIndex.value + (availablePieces.isEmpty ? 1 : 0);
+    return '$completed/${animals.length} puzzle selesai';
+  }
+
+  @override
+  void onClose() {
+    // Don't auto-save when controller is disposed
+    // Only save on explicit completion
+    super.onClose();
   }
 }

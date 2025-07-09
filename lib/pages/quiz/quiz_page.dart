@@ -1,5 +1,6 @@
 // pages/quiz/quiz_page.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_application_2/pages/score_tracking/score_controller.dart'; // Import score controller
 import 'package:get/get.dart';
 import 'quiz_controller.dart';
 
@@ -51,6 +52,13 @@ class QuizPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ============ TAMBAHAN: Pastikan ScoreController tersedia ============
+    // Pastikan ScoreController sudah diinisialisasi
+    if (!Get.isRegistered<ScoreController>()) {
+      Get.put(ScoreController());
+    }
+    // ============ END TAMBAHAN ============
+
     Get.delete<QuizController>(force: true);
 
     final controller = Get.put(QuizController(quizType: quizType));
@@ -125,34 +133,75 @@ class QuizPage extends StatelessWidget {
                           ),
                         ),
 
-                        // Score indicator with stars
+                        // ============ MODIFIKASI: Score indicator dengan progress bar ============
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
+                            horizontal: 12,
+                            vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.orange.withOpacity(0.7),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.star,
-                                color: Colors.white,
-                                size: 20,
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.2),
+                                blurRadius: 5,
+                                offset: const Offset(0, 2),
                               ),
-                              const SizedBox(width: 4),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              // Score dengan bintang
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.star,
+                                    color: Colors.amber,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  GetBuilder<QuizController>(
+                                    id: 'score',
+                                    builder: (controller) {
+                                      return Text(
+                                        "${controller.score}/${controller.questions.length}",
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blueGrey,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              // Progress bar untuk soal
                               GetBuilder<QuizController>(
-                                id: 'score',
+                                id: 'quiz_body',
                                 builder: (controller) {
-                                  return Text(
-                                    "${controller.score}/${controller.questions.length}",
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                  double progress = controller.questions.isEmpty 
+                                      ? 0.0 
+                                      : (controller.currentQuestionIndex + 1) / controller.questions.length;
+                                  
+                                  return Container(
+                                    width: 80,
+                                    height: 4,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[300],
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                    child: FractionallySizedBox(
+                                      alignment: Alignment.centerLeft,
+                                      widthFactor: progress,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue,
+                                          borderRadius: BorderRadius.circular(2),
+                                        ),
+                                      ),
                                     ),
                                   );
                                 },
@@ -160,6 +209,7 @@ class QuizPage extends StatelessWidget {
                             ],
                           ),
                         ),
+                        // ============ END MODIFIKASI ============
                       ],
                     ),
                   ),
@@ -419,40 +469,80 @@ class QuizPage extends StatelessWidget {
 
                                 const SizedBox(height: 30),
 
-                                // Progress dengan emoji
+                                // ============ MODIFIKASI: Progress dengan timer dan emoji ============
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
-                                    vertical: 8,
+                                    vertical: 12,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.8),
+                                    color: Colors.white.withOpacity(0.9),
                                     borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text(
-                                        '🎯',
-                                        style: TextStyle(fontSize: 20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.1),
+                                        blurRadius: 5,
+                                        offset: const Offset(0, 2),
                                       ),
-                                      const SizedBox(width: 8),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      // Progress indicator
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Text(
+                                            '🎯',
+                                            style: TextStyle(fontSize: 20),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          GetBuilder<QuizController>(
+                                            id: 'quiz_body',
+                                            builder: (controller) {
+                                              return Text(
+                                                "Soal ${controller.currentQuestionIndex + 1} dari ${controller.questions.length}",
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.blueGrey,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      // Timer indicator (optional)
                                       GetBuilder<QuizController>(
                                         id: 'quiz_body',
                                         builder: (controller) {
-                                          return Text(
-                                            "Soal ${controller.currentQuestionIndex + 1} dari ${controller.questions.length}",
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.blueGrey,
-                                            ),
+                                          final elapsed = DateTime.now().difference(controller.startTime).inSeconds;
+                                          return Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.timer_outlined,
+                                                size: 16,
+                                                color: Colors.grey[600],
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                '${elapsed ~/ 60}:${(elapsed % 60).toString().padLeft(2, '0')}',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.grey[600],
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
                                           );
                                         },
                                       ),
                                     ],
                                   ),
                                 ),
+                                // ============ END MODIFIKASI ============
 
                                 const SizedBox(height: 40),
                               ],

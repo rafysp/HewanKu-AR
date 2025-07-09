@@ -78,32 +78,74 @@ class HabitatDragQuizPage extends StatelessWidget {
                       ),
                     ),
 
-                    // Score indicator with stars
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
+                        horizontal: 12,
+                        vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Color.fromRGBO(255, 152, 0, 0.7),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.2),
+                            spreadRadius: 1,
+                            blurRadius: 3,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      child: Row(
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
-                            Icons.star,
-                            color: Color.fromRGBO(255, 255, 255, 1.0),
-                            size: 20,
+                          // Score dengan bintang
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 4),
+                              Obx(() {
+                                return Text(
+                                  "${controller.score.value}/${controller.questions.length}",
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blueGrey,
+                                  ),
+                                );
+                              }),
+                            ],
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(height: 4),
+                          // Progress bar untuk quiz
                           Obx(() {
-                            return Text(
-                              "${controller.score.value}/${controller.questions.length}",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Color.fromRGBO(255, 255, 255, 1.0),
+                            double progress =
+                                controller.questions.isEmpty
+                                    ? 0.0
+                                    : (controller.currentQuestionIndex.value +
+                                            1) /
+                                        controller.questions.length;
+
+                            return Container(
+                              width: 80,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                              child: FractionallySizedBox(
+                                alignment: Alignment.centerLeft,
+                                widthFactor: progress,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
                               ),
                             );
                           }),

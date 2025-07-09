@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/pages/quiz/widgets/animal_info_dialog.dart';
+import 'package:flutter_application_2/pages/score_tracking/score_controller.dart'; // TAMBAHAN: Import score controller
 import 'package:get/get.dart';
 import 'dart:math';
 
@@ -42,6 +43,11 @@ class QuizController extends GetxController {
   final QuizType quizType;
 
   QuizController({required this.quizType});
+
+  // ============ TAMBAHAN: Score Tracking Variables ============
+  late ScoreController scoreController;
+  late DateTime startTime;
+  // ============ END TAMBAHAN ============
 
   // Observable variables
   QuizQuestion? _currentQuestion;
@@ -292,6 +298,12 @@ class QuizController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    
+    // ============ TAMBAHAN: Inisialisasi Score Tracking ============
+    scoreController = Get.find<ScoreController>();
+    startTime = DateTime.now();
+    // ============ END TAMBAHAN ============
+    
     generateAllQuestions();
     selectRandomQuestions();
     loadQuestion();
@@ -322,7 +334,6 @@ class QuizController extends GetxController {
   }
 
   void selectRandomQuestions() {
-   
     allQuestions.shuffle(_random);
     questions = allQuestions.take(5).toList();
   }
@@ -831,27 +842,42 @@ class QuizController extends GetxController {
     }
   }
 
+  // ============ MODIFIKASI: showQuizResult dengan Score Tracking ============
   void showQuizResult() {
+    // TAMBAHAN: Hitung durasi quiz dalam detik
+    final duration = DateTime.now().difference(startTime).inSeconds;
+    
+    // TAMBAHAN: Hitung persentase untuk sistem 0-100
+    double percentage = (score / questions.length) * 100;
+    
+    // TAMBAHAN: Simpan score ke tracking system
+    _saveCurrentScore(duration);
+    
     // Pilih emoji berdasarkan skor
     String emoji = '';
     String message = '';
     Color bgColor = Colors.blue[50]!;
 
-    if (score == questions.length) {
+    // MODIFIKASI: Gunakan persentase untuk menentukan emoji dan pesan
+    if (percentage >= 90) {
       emoji = '🌟🎉';
       message = 'Hebat sekali! Kamu mendapat nilai sempurna!';
       bgColor = Colors.amber[50]!;
-    } else if (score >= questions.length * 0.7) {
+    } else if (percentage >= 80) {
       emoji = '😊👏';
-      message = 'Bagus! Kamu sudah menguasai banyak!';
+      message = 'Bagus sekali! Kamu sudah menguasai materi!';
       bgColor = Colors.green[50]!;
-    } else if (score >= questions.length * 0.4) {
+    } else if (percentage >= 70) {
       emoji = '👍';
+      message = 'Cukup baik! Terus tingkatkan lagi ya!';
+      bgColor = Colors.blue[50]!;
+    } else if (percentage >= 60) {
+      emoji = '💪';
       message = 'Coba lagi ya! Kamu pasti bisa lebih baik!';
       bgColor = Colors.orange[50]!;
     } else {
-      emoji = '💪';
-      message = 'Terus belajar ya! Kamu pasti bisa!';
+      emoji = '🔥';
+      message = 'Jangan menyerah! Terus belajar ya!';
       bgColor = Colors.red[50]!;
     }
 
@@ -884,6 +910,61 @@ class QuizController extends GetxController {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
+              
+              // ============ TAMBAHAN: Score Box dengan sistem 0-100 ============
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      '${percentage.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                        color: percentage >= 80 ? Colors.green : 
+                               percentage >= 60 ? Colors.orange : Colors.red,
+                      ),
+                    ),
+                    Text(
+                      '/100',
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Benar $score dari ${questions.length} soal',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Waktu: ${_formatDuration(duration)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              
               // Skor dengan bintang - maksimal 2 baris
               Wrap(
                 alignment: WrapAlignment.center,
@@ -897,47 +978,56 @@ class QuizController extends GetxController {
                   );
                 }),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Kamu benar $score dari ${questions.length}',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blueGrey[600],
-                ),
-              ),
+              
               const SizedBox(height: 24),
+              
+              // ============ MODIFIKASI: Tombol dengan riwayat (commented out) ============
               Row(
                 children: [
+                  // Tombol Riwayat (commented out untuk nanti)
+                  /*
                   Expanded(
-                    child: ElevatedButton(
+                    child: ElevatedButton.icon(
                       onPressed: () {
-                        Get.close(2); // Close dialog and quiz page
+                        Get.back();
+                        Get.toNamed('/score_history');
                       },
+                      icon: Icon(Icons.history, color: Colors.white),
+                      label: Text(
+                        'Riwayat',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: Colors.orange,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),
-                      child: const Text(
-                        'Kembali',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  */
+                  
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Get.back();
+                        resetQuiz();
+                      },
+                      icon: Icon(Icons.refresh, color: Colors.white),
+                      label: Text(
+                        'Main Lagi',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Get.back();
-                        resetQuiz();
-                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -945,12 +1035,28 @@ class QuizController extends GetxController {
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),
-                      child: const Text(
-                        'Main Lagi',
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Get.close(2); // Close dialog and quiz page
+                      },
+                      icon: Icon(Icons.home, color: Colors.white),
+                      label: Text(
+                        'Kembali',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
                         ),
                       ),
                     ),
@@ -965,9 +1071,11 @@ class QuizController extends GetxController {
     );
   }
 
+  // ============ MODIFIKASI: resetQuiz dengan reset waktu ============
   void resetQuiz() {
     currentQuestionIndex = 0;
     score = 0; // PERBAIKAN: Ini akan update UI score indicator
+    startTime = DateTime.now(); // TAMBAHAN: Reset waktu mulai
     // Generate new random questions when resetting
     selectRandomQuestions();
     loadQuestion();
@@ -987,6 +1095,49 @@ class QuizController extends GetxController {
         return "Habitat Hewan";
       case QuizType.puzzleHewan:
         return "Puzzle Hewan";
+    }
+  }
+
+  // ============ TAMBAHAN: Helper Methods untuk Score Tracking ============
+  Future<void> _saveCurrentScore(int duration) async {
+    String categoryName = '';
+    String quizTypeName = '';
+    
+    switch (quizType) {
+      case QuizType.tebakGambar:
+        categoryName = 'Tebak Gambar Hewan';
+        quizTypeName = 'Tebak Gambar';
+        break;
+      case QuizType.kategoriHewan:
+        categoryName = 'Kategori Hewan';
+        quizTypeName = 'Kategorisasi';
+        break;
+      case QuizType.habitatHewan:
+        categoryName = 'Habitat Hewan';
+        quizTypeName = 'Habitat';
+        break;
+      case QuizType.puzzleHewan:
+        categoryName = 'Puzzle Hewan';
+        quizTypeName = 'Puzzle';
+        break;
+    }
+
+    await scoreController.saveScore(
+      correctAnswers: score,
+      totalQuestions: questions.length,
+      category: categoryName,
+      quizType: quizTypeName,
+      duration: duration,
+    );
+  }
+
+  String _formatDuration(int seconds) {
+    if (seconds < 60) {
+      return '${seconds}d';
+    } else {
+      int minutes = seconds ~/ 60;
+      int remainingSeconds = seconds % 60;
+      return '${minutes}m ${remainingSeconds}d';
     }
   }
 }

@@ -1,13 +1,26 @@
+// pages/home/home_controller.dart - Updated with Score History Navigation
 import 'package:flutter_application_2/pages/animals/animal_page.dart';
 import 'package:flutter_application_2/pages/camera/camera_page.dart';
+import 'package:flutter_application_2/pages/home/score_history/score_history_page.dart';
 import 'package:flutter_application_2/pages/quiz/habitat/habitat_drag_quiz.dart';
 import 'package:flutter_application_2/pages/quiz/puzzle/puzzle_game_page.dart';
 import 'package:flutter_application_2/pages/quiz/quiz_page.dart';
 import 'package:flutter_application_2/pages/quiz/quiz_controller.dart';
+import 'package:flutter_application_2/pages/score_tracking/score_controller.dart'; // TAMBAHAN: Import score controller
 
 import 'package:get/get.dart';
 
 class HomeController extends GetxController {
+  
+  // ============ TAMBAHAN: Inisialisasi Score Controller ============
+  @override
+  void onInit() {
+    super.onInit();
+    // Pastikan ScoreController sudah diinisialisasi
+    if (!Get.isRegistered<ScoreController>()) {
+      Get.put(ScoreController());
+    }
+  }
   
   void onCategoryTap(int index) {
     // Navigasi ke quiz berdasarkan kategori yang dipilih
@@ -61,6 +74,11 @@ class HomeController extends GetxController {
     // Get.to(() => BannerDetailsPage());
   }
 
+  // ============ TAMBAHAN: Navigation ke Score History ============
+  void navigateToScoreHistory() {
+    Get.to(() => ScoreHistoryPage());
+  }
+
   // Helper method untuk debugging kategori
   String getCategoryName(int index) {
     switch(index) {
@@ -94,6 +112,6 @@ class HomeController extends GetxController {
   }
 
   void navigateToCameraPage() { 
-    Get.to(() => KidFriendlyCameraPage ());
+    Get.to(() => KidFriendlyCameraPage());
   }
 }

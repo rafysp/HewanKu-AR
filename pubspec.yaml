@@ -47,6 +47,7 @@ dependencies:
   flutter_3d_controller: ^2.2.0
   flutter_launcher_icons: ^0.14.4
   haptic_feedback: ^0.5.1+1
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
