@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/pages/quiz/habitat/habitat_quiz_controller.dart';
 import 'package:flutter_application_2/pages/quiz/habitat/model/habitatmodel.dart';
+import 'package:flutter_application_2/pages/quiz/habitat/model/animalmodel.dart';
 import 'package:get/get.dart';
 
 class HabitatDragQuizPage extends StatelessWidget {
@@ -126,8 +127,7 @@ class HabitatDragQuizPage extends StatelessWidget {
                             double progress =
                                 controller.questions.isEmpty
                                     ? 0.0
-                                    : (controller.currentQuestionIndex.value +
-                                            1) /
+                                    : (controller.currentQuestionIndex.value + 1) /
                                         controller.questions.length;
 
                             return Container(
@@ -172,52 +172,11 @@ class HabitatDragQuizPage extends StatelessWidget {
                         ),
                         child: Column(
                           children: [
-                            // Question text
-                            Container(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Color.fromRGBO(255, 255, 255, 0.8),
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Color.fromRGBO(0, 0, 0, 0.1),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: Color.fromRGBO(255, 193, 7, 0.3),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.help_outline,
-                                      color: Color.fromRGBO(251, 140, 0, 1.0),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      "Di mana ${controller.currentQuestion!.name} hidup?",
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color.fromRGBO(69, 90, 100, 1.0),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            // Enhanced Question Section dengan Rules
+                            _buildEnhancedQuestionSection(controller),
+
+                            // Hint Display Section
+                            _buildHintSection(controller),
 
                             // Draggable animal image with flexible height
                             Container(
@@ -225,6 +184,9 @@ class HabitatDragQuizPage extends StatelessWidget {
                               padding: const EdgeInsets.all(16.0),
                               child: _buildDraggableAnimal(controller),
                             ),
+
+                            // Hint Button
+                            _buildHintButton(controller),
 
                             // Habitat options for dropping
                             Container(
@@ -246,12 +208,10 @@ class HabitatDragQuizPage extends StatelessWidget {
                                       scrollDirection: Axis.horizontal,
                                       itemCount: controller.habitats.length,
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal:
-                                            20, // Increased from 16 to 20
+                                        horizontal: 20, // Increased from 16 to 20
                                       ),
                                       itemBuilder: (context, index) {
-                                        final habitat =
-                                            controller.habitats[index];
+                                        final habitat = controller.habitats[index];
                                         return _buildHabitatDropTarget(
                                           habitat,
                                           controller,
@@ -263,38 +223,8 @@ class HabitatDragQuizPage extends StatelessWidget {
                               ),
                             ),
 
-                            // Progress indicator
-                            Container(
-                              margin: const EdgeInsets.all(16),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Color.fromRGBO(255, 255, 255, 0.8),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text(
-                                    '🎯',
-                                    style: TextStyle(fontSize: 20),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Obx(() {
-                                    return Text(
-                                      "Soal ${controller.currentQuestionIndex.value + 1} dari ${controller.questions.length}",
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color.fromRGBO(69, 90, 100, 1.0),
-                                      ),
-                                    );
-                                  }),
-                                ],
-                              ),
-                            ),
+                            // Enhanced Progress indicator
+                            _buildEnhancedProgressSection(controller),
                           ],
                         ),
                       ),
@@ -305,6 +235,367 @@ class HabitatDragQuizPage extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // Enhanced Question Section dengan aturan sederhana
+  Widget _buildEnhancedQuestionSection(DragAndDropQuizController controller) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Color.fromRGBO(0, 0, 0, 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Question header
+          Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Color.fromRGBO(255, 193, 7, 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.help_outline,
+                  color: Color.fromRGBO(251, 140, 0, 1.0),
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Tebak Habitat!",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromRGBO(69, 90, 100, 1.0),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Obx(() => Text(
+                      "Di mana ${controller.currentQuestion?.name ?? 'hewan ini'} hidup?",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Color.fromRGBO(99, 99, 99, 1),
+                      ),
+                    )),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Simple rules reminder
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Color.fromRGBO(240, 248, 255, 1.0),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: Colors.blue.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  "💡 Ingat aturan sederhana:",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[800],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildRuleItem('💧', 'Bisa berenang', '→ Air'),
+                    _buildRuleItem('🏠', 'Dipelihara', '→ Rumah'),
+                    _buildRuleItem('🌳', 'Hidup bebas', '→ Alam'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRuleItem(String emoji, String condition, String result) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(emoji, style: TextStyle(fontSize: 20)),
+          const SizedBox(height: 4),
+          Text(
+            condition,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.blue[700],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            result,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue[800],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Hint Section
+  Widget _buildHintSection(DragAndDropQuizController controller) {
+    return Obx(() {
+      if (!controller.showHint.value) {
+        return SizedBox.shrink();
+      }
+
+      return AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _getHintColor(controller.currentHintLevel.value),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: _getHintBorderColor(controller.currentHintLevel.value),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: _getHintBorderColor(controller.currentHintLevel.value),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _getHintIcon(controller.currentHintLevel.value),
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _getHintTitle(controller.currentHintLevel.value),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: _getHintBorderColor(controller.currentHintLevel.value),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    controller.getCurrentHint(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  // Hint Button
+  Widget _buildHintButton(DragAndDropQuizController controller) {
+    return Obx(() {
+      // Jika sudah dijawab, sembunyikan tombol hint
+      if (controller.isAnswered.value) {
+        return SizedBox.shrink();
+      }
+
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: ElevatedButton(
+          onPressed: () => controller.showNextHint(),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color.fromRGBO(255, 193, 7, 1.0),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25),
+            ),
+            elevation: 4,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.lightbulb_outline,
+                size: 20,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                controller.currentHintLevel.value == 0 
+                    ? 'Butuh Bantuan?' 
+                    : controller.currentHintLevel.value < 3 
+                    ? 'Bantuan Lagi?' 
+                    : 'Lihat Jawaban',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  // Enhanced Progress Section
+  Widget _buildEnhancedProgressSection(DragAndDropQuizController controller) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color.fromRGBO(255, 255, 255, 0.9),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Progress dots
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(controller.totalQuestions.value, (index) {
+              bool isCompleted = index < controller.currentQuestionIndex.value;
+              bool isCurrent = index == controller.currentQuestionIndex.value;
+              
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: isCompleted 
+                      ? Colors.green
+                      : isCurrent 
+                      ? Colors.blue
+                      : Colors.grey.withOpacity(0.3),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isCurrent ? Colors.blue : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: isCompleted
+                      ? Icon(
+                          Icons.check,
+                          color: Colors.white,
+                          size: 16,
+                        )
+                      : Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            color: isCurrent ? Colors.white : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                ),
+              );
+            }),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Progress text
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.emoji_events,
+                color: Colors.amber,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Obx(() => Text(
+                'Soal ${controller.currentQuestionIndex.value + 1} dari ${controller.totalQuestions.value}',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueGrey[700],
+                ),
+              )),
+            ],
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // Score display
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ...List.generate(controller.totalQuestions.value, (index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Icon(
+                    Icons.star,
+                    color: index < controller.correctAnswers.value 
+                        ? Colors.amber 
+                        : Colors.grey[300],
+                    size: 20,
+                  ),
+                );
+              }),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -393,11 +684,10 @@ class HabitatDragQuizPage extends StatelessWidget {
                     if (loadingProgress == null) return child;
                     return Center(
                       child: CircularProgressIndicator(
-                        value:
-                            loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                                : null,
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
                         strokeWidth: 3,
                         color: Color.fromRGBO(33, 150, 243, 1.0),
                       ),
@@ -485,21 +775,12 @@ class HabitatDragQuizPage extends StatelessWidget {
                                     width: 50,
                                     height: 50,
                                     child: CircularProgressIndicator(
-                                      value:
-                                          loadingProgress.expectedTotalBytes !=
-                                                  null
-                                              ? loadingProgress
-                                                      .cumulativeBytesLoaded /
-                                                  loadingProgress
-                                                      .expectedTotalBytes!
-                                              : null,
+                                      value: loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress.cumulativeBytesLoaded /
+                                              loadingProgress.expectedTotalBytes!
+                                          : null,
                                       strokeWidth: 4,
-                                      backgroundColor: Color.fromRGBO(
-                                        200,
-                                        230,
-                                        201,
-                                        0.5,
-                                      ),
+                                      backgroundColor: Color.fromRGBO(200, 230, 201, 0.5),
                                       color: Color.fromRGBO(76, 175, 80, 0.8),
                                     ),
                                   ),
@@ -534,9 +815,7 @@ class HabitatDragQuizPage extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
                                   child: Text(
                                     "Gambar tidak tersedia",
                                     style: TextStyle(
@@ -558,10 +837,7 @@ class HabitatDragQuizPage extends StatelessWidget {
                   Flexible(
                     flex: 1,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       child: Text(
                         "Tarik ${controller.currentQuestion!.name} ke habitatnya!",
                         style: TextStyle(
@@ -606,24 +882,21 @@ class HabitatDragQuizPage extends StatelessWidget {
                 offset: const Offset(0, 2),
               ),
             ],
-            border:
-                controller.currentAnimalHabitat.value == habitat.name
+            border: controller.currentAnimalHabitat.value == habitat.name
+                ? Border.all(
+                    color: Color.fromRGBO(255, 255, 255, 1.0),
+                    width: 3,
+                  )
+                : isHighlighted
                     ? Border.all(
-                      color: Color.fromRGBO(255, 255, 255, 1.0),
-                      width: 3,
-                    )
-                    : isHighlighted
-                    ? Border.all(
-                      color: Color.fromRGBO(255, 255, 255, 0.8),
-                      width: 2,
-                      style: BorderStyle.solid,
-                    )
+                        color: Color.fromRGBO(255, 255, 255, 0.8),
+                        width: 2,
+                        style: BorderStyle.solid,
+                      )
                     : null,
           ),
           child: Padding(
-            padding: const EdgeInsets.all(
-              8.0,
-            ), // Added padding inside container
+            padding: const EdgeInsets.all(8.0), // Added padding inside container
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
@@ -648,13 +921,10 @@ class HabitatDragQuizPage extends StatelessWidget {
                               if (loadingProgress == null) return child;
                               return Center(
                                 child: CircularProgressIndicator(
-                                  value:
-                                      loadingProgress.expectedTotalBytes != null
-                                          ? loadingProgress
-                                                  .cumulativeBytesLoaded /
-                                              loadingProgress
-                                                  .expectedTotalBytes!
-                                          : null,
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
                                   strokeWidth: 2,
                                   color: habitat.color,
                                 ),
@@ -675,7 +945,7 @@ class HabitatDragQuizPage extends StatelessWidget {
                       );
                     }
 
-                    // Default habitat icon
+                    // Default habitat icon - Enhanced dengan emoji dari model
                     return Container(
                       width: 50,
                       height: 50,
@@ -683,10 +953,24 @@ class HabitatDragQuizPage extends StatelessWidget {
                         color: Color.fromRGBO(255, 255, 255, 0.3),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        _getHabitatIcon(habitat.name),
-                        color: Color.fromRGBO(255, 255, 255, 1.0),
-                        size: 25,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Emoji dari model (enhancement)
+                            Text(
+                              habitat.emoji ?? _getHabitatEmoji(habitat.name),
+                              style: TextStyle(fontSize: 18),
+                            ),
+                            const SizedBox(height: 2),
+                            // Icon fallback seperti kode asli
+                            Icon(
+                              habitat.icon ?? _getHabitatIcon(habitat.name),
+                              color: Color.fromRGBO(255, 255, 255, 1.0),
+                              size: 14, // Lebih kecil karena ada emoji
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }),
@@ -722,6 +1006,81 @@ class HabitatDragQuizPage extends StatelessWidget {
     );
   }
 
+  // Helper methods untuk hint system
+  Color _getHintColor(int level) {
+    switch (level) {
+      case 1:
+        return Color.fromRGBO(227, 242, 253, 1.0); // Light blue
+      case 2:
+        return Color.fromRGBO(255, 243, 224, 1.0); // Light orange
+      case 3:
+        return Color.fromRGBO(232, 245, 233, 1.0); // Light green
+      default:
+        return Color.fromRGBO(245, 245, 245, 1.0); // Light gray
+    }
+  }
+
+  Color _getHintBorderColor(int level) {
+    switch (level) {
+      case 1:
+        return Color.fromRGBO(33, 150, 243, 1.0); // Blue
+      case 2:
+        return Color.fromRGBO(255, 152, 0, 1.0); // Orange
+      case 3:
+        return Color.fromRGBO(76, 175, 80, 1.0); // Green
+      default:
+        return Color.fromRGBO(158, 158, 158, 1.0); // Gray
+    }
+  }
+
+  IconData _getHintIcon(int level) {
+    switch (level) {
+      case 1:
+        return Icons.help_outline;
+      case 2:
+        return Icons.rule;
+      case 3:
+        return Icons.visibility;
+      default:
+        return Icons.lightbulb_outline;
+    }
+  }
+
+  String _getHintTitle(int level) {
+    switch (level) {
+      case 1:
+        return 'Bantuan 1: Ciri-ciri Hewan';
+      case 2:
+        return 'Bantuan 2: Aturan Sederhana';
+      case 3:
+        return 'Bantuan 3: Jawaban';
+      default:
+        return 'Bantuan';
+    }
+  }
+
+  // Helper methods untuk fallback jika model tidak memiliki emoji/icon
+  String _getHabitatEmoji(String habitatName) {
+    switch (habitatName) {
+      case 'Air':
+        return '💧';
+      case 'Rumah':
+        return '🏠';
+      case 'Alam':
+        return '🌳';
+      case 'Hutan':
+        return '🌲';
+      case 'Padang Rumput':
+        return '🌾';
+      case 'Peternakan':
+        return '🚜';
+      case 'Laut':
+        return '🌊';
+      default:
+        return '🌍';
+    }
+  }
+
   IconData _getHabitatIcon(String habitatName) {
     switch (habitatName) {
       case "Hutan":
@@ -736,6 +1095,8 @@ class HabitatDragQuizPage extends StatelessWidget {
         return Icons.home;
       case "Peternakan":
         return Icons.agriculture;
+      case "Alam":
+        return Icons.forest;
       case "Kutub":
         return Icons.ac_unit;
       case "Gurun":

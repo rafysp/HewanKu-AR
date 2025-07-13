@@ -30,7 +30,7 @@ class HapticHelper {
       print("Haptic error: $e");
     }
   }
-  
+
   static void mediumImpact() {
     try {
       SystemChannels.platform.invokeMethod('HapticFeedback.mediumImpact');
@@ -38,7 +38,7 @@ class HapticHelper {
       print("Haptic error: $e");
     }
   }
-  
+
   static void heavyImpact() {
     try {
       SystemChannels.platform.invokeMethod('HapticFeedback.heavyImpact');
@@ -46,7 +46,7 @@ class HapticHelper {
       print("Haptic error: $e");
     }
   }
-  
+
   static void selectionClick() {
     try {
       SystemChannels.platform.invokeMethod('HapticFeedback.selectionClick');
@@ -66,10 +66,10 @@ class AdvancedHaptic {
 }
 
 // =============================================================================
-// 🚀 ULTRA-FAST AR CONTROLLER - DROP-IN REPLACEMENT
+// 🚀 CAMERA CONTROLLER - DROP-IN REPLACEMENT
 // KEEPS ALL ORIGINAL VARIABLE NAMES AND UI COMPATIBILITY
 // =============================================================================
-class KidFriendlyARController extends GetxController {
+class CameraController extends GetxController {
   // AR related variables - UNCHANGED
   ARSessionManager? arSessionManager;
   ARObjectManager? arObjectManager;
@@ -94,23 +94,23 @@ class KidFriendlyARController extends GetxController {
   final double minScale = 0.2;
   final double maxScale = 0.8;
 
-  // 🚀 KEEPING ORIGINAL VARIABLES BUT WITH ULTRA-FAST INTERNAL LOGIC
+  // 🚀 KEEPING ORIGINAL VARIABLES BUT WITH OPTIMIZED INTERNAL LOGIC
   List<ARHitTestResult> _stabilityBuffer = [];
-  final int _stabilityBufferSize = 5;          
-  final double _stabilityThreshold = 0.02;     
+  final int _stabilityBufferSize = 5;
+  final double _stabilityThreshold = 0.02;
   Timer? _stabilityCheckTimer;
   RxBool isTrackingStable = false.obs;
-  
+
   vector.Vector3? _lastStablePosition;
   vector.Vector4? _lastStableRotation;
-  final double _positionDriftThreshold = 0.01; 
-  final double _rotationDriftThreshold = 0.05; 
-  
+  final double _positionDriftThreshold = 0.01;
+  final double _rotationDriftThreshold = 0.05;
+
   RxString trackingQuality = "Unknown".obs;
   RxBool isTrackingLost = false.obs;
   Timer? _trackingMonitor;
 
-  // 🚀 ULTRA-FAST DETECTION VARIABLES - OPTIMIZED INTERNALLY
+  // 🚀 SMART DETECTION VARIABLES - OPTIMIZED INTERNALLY
   RxInt detectedPlanesCount = 0.obs;
   RxBool hasFoundGoodAnchor = false.obs;
   List<ARHitTestResult> _fastHitBuffer = [];
@@ -122,7 +122,7 @@ class KidFriendlyARController extends GetxController {
 
   // 🚀 OPTIMIZED SETTINGS - INTERNAL ONLY, UI UNCHANGED
   final int minPlanesForGoodTracking = 1; // 🔥 CHANGED: 1 plane only!
-  final int maxPlaneDetectionTime = 3;    // 🔥 CHANGED: 3 seconds only!
+  final int maxPlaneDetectionTime = 3; // 🔥 CHANGED: 3 seconds only!
   RxString currentGuidanceMessage = "".obs;
   RxString currentGuidanceIcon = "🔍".obs;
   RxBool showVisualHelper = true.obs;
@@ -152,15 +152,15 @@ class KidFriendlyARController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _initializeKidFriendlySettings();
+    _initializeUserSettings();
     _setupInitialAnimalSelection();
-    _startStableKidFriendlyGuidance(); // 🚀 ULTRA-OPTIMIZED VERSION
+    _startStableUserGuidance(); // 🚀 OPTIMIZED VERSION
   }
 
-  void _initializeKidFriendlySettings() {
+  void _initializeUserSettings() {
     // Enable haptic feedback for better interaction
     HapticHelper.lightImpact();
-    
+
     // Set initial guidance
     currentGuidanceMessage.value = "Mari cari permukaan yang stabil! 📱";
     currentGuidanceIcon.value = "🔍";
@@ -175,17 +175,19 @@ class KidFriendlyARController extends GetxController {
       );
 
       if (modelIndex != -1) {
-        Future.delayed(Duration(milliseconds: 500), () { // 🔥 FASTER: 500ms vs 800ms
+        Future.delayed(Duration(milliseconds: 500), () {
+          // 🔥 FASTER: 500ms vs 800ms
           onModelTap(modelIndex);
         });
       }
     }
   }
 
-  // 🚀 ULTRA-OPTIMIZED: Guidance system with MUCH faster detection
-  void _startStableKidFriendlyGuidance() {
-    // 🔥 MUCH faster guidance updates
-    _guidanceTimer = Timer.periodic(Duration(milliseconds: 500), (timer) { // 🔥 500ms vs 2000ms
+  // 🚀 OPTIMIZED: Guidance system with faster detection
+  void _startStableUserGuidance() {
+    // 🔥 Faster guidance updates
+    _guidanceTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
+      // 🔥 500ms vs 2000ms
       if (!isARInitialized.value) {
         _updateGuidanceMessage("Menyiapkan kamera... 📷", "⏳");
       } else if (isPlaneDetectionInProgress.value) {
@@ -194,42 +196,54 @@ class KidFriendlyARController extends GetxController {
         } else {
           // 🔥 IMMEDIATE success message for any plane detected
           _updateGuidanceMessage("Bagus! Permukaan terdeteksi! ✅", "🎉");
-          _completeUltraFastDetection();
+          _completeOptimizedDetection();
         }
-      } else if (isPlaneScanningComplete.value && selectedModelUrl.value.isNotEmpty) {
+      } else if (isPlaneScanningComplete.value &&
+          selectedModelUrl.value.isNotEmpty) {
         _updateGuidanceMessage("Sentuh layar untuk menempatkan hewan! 👆", "✨");
         timer.cancel();
       }
     });
 
-    // 🚀 ULTRA-FAST detection monitor - MUCH more aggressive
-    _stabilizationTimer = Timer.periodic(Duration(milliseconds: 50), (timer) { // 🔥 50ms vs 150ms
-      if (isPlaneDetectionInProgress.value && detectedPlanesCount.value >= minPlanesForGoodTracking) {
-        // 🔥 IMMEDIATE completion for ultra-fast experience
-        _completeUltraFastDetection();
+    // 🚀 SMART detection monitor - more aggressive
+    _stabilizationTimer = Timer.periodic(Duration(milliseconds: 50), (timer) {
+      // 🔥 50ms vs 150ms
+      if (isPlaneDetectionInProgress.value &&
+          detectedPlanesCount.value >= minPlanesForGoodTracking) {
+        // 🔥 IMMEDIATE completion for optimized experience
+        _completeOptimizedDetection();
         timer.cancel();
       } else if (isPlaneDetectionInProgress.value) {
         // 🔥 Update progress more aggressively
-        detectionProgress.value = min(detectedPlanesCount.value / minPlanesForGoodTracking.toDouble(), 1.0);
+        detectionProgress.value = min(
+          detectedPlanesCount.value / minPlanesForGoodTracking.toDouble(),
+          1.0,
+        );
       }
     });
 
     // 🔥 MUCH shorter timeout for kids
-    _planeDetectionTimeoutTimer = Timer(Duration(seconds: maxPlaneDetectionTime), () {
-      if (isPlaneDetectionInProgress.value) {
-        isPlaneScanningComplete.value = true;
-        isPlaneDetectionInProgress.value = false;
-        detectionProgress.value = 0.8; // Show good progress
-        detectionStatus.value = "Siap! Sentuh layar ya! 😊";
-        currentStatusColor.value = Colors.orange;
-        
-        _updateGuidanceMessage("Tidak apa-apa, coba tap layar sekarang! 😊", "👆");
-      }
-    });
+    _planeDetectionTimeoutTimer = Timer(
+      Duration(seconds: maxPlaneDetectionTime),
+      () {
+        if (isPlaneDetectionInProgress.value) {
+          isPlaneScanningComplete.value = true;
+          isPlaneDetectionInProgress.value = false;
+          detectionProgress.value = 0.8; // Show good progress
+          detectionStatus.value = "Siap! Sentuh layar ya! 😊";
+          currentStatusColor.value = Colors.orange;
+
+          _updateGuidanceMessage(
+            "Tidak apa-apa, coba tap layar sekarang! 😊",
+            "👆",
+          );
+        }
+      },
+    );
   }
 
-  // 🚀 NEW: Ultra-fast completion function
-  void _completeUltraFastDetection() {
+  // 🚀 NEW: Optimized completion function
+  void _completeOptimizedDetection() {
     if (!isPlaneScanningComplete.value) {
       hasFoundGoodAnchor.value = true;
       isPlaneScanningComplete.value = true;
@@ -238,16 +252,19 @@ class KidFriendlyARController extends GetxController {
       detectionProgress.value = 1.0;
       detectionStatus.value = "Tracking stabil! Sentuh layar! ✅";
       currentStatusColor.value = Colors.green;
-      
-      _updateGuidanceMessage("Sempurna! Sentuh area untuk menempatkan! 👆", "🎯");
-      
+
+      _updateGuidanceMessage(
+        "Sempurna! Sentuh area untuk menempatkan! 👆",
+        "🎯",
+      );
+
       // Immediate haptic feedback
       HapticHelper.mediumImpact();
-      
+
       _showSuccessAnimation();
       _stopPlaneDetectionSmart();
-      
-      print("🚀 ULTRA-FAST detection completed in record time!");
+
+      print("🚀 OPTIMIZED detection completed in record time!");
     }
   }
 
@@ -288,7 +305,10 @@ class KidFriendlyARController extends GetxController {
   void onModelTap(int index) {
     // Enhanced validation with kid-friendly messages
     if (index < 0 || index >= allAnimals.length) {
-      _showKidFriendlyError("Ups! Hewan tidak ditemukan 😅", "Coba pilih hewan yang lain ya!");
+      _showUserError(
+        "Ups! Hewan tidak ditemukan 😅",
+        "Coba pilih hewan yang lain ya!",
+      );
       return;
     }
 
@@ -306,7 +326,7 @@ class KidFriendlyARController extends GetxController {
 
     // Exciting feedback for kids
     HapticHelper.selectionClick();
-    
+
     Get.snackbar(
       "🎉 ${selectedModel["name"]} dipilih!",
       hasFoundGoodAnchor.value && isTrackingStable.value
@@ -320,7 +340,7 @@ class KidFriendlyARController extends GetxController {
     );
   }
 
-  void _showKidFriendlyError(String title, String message) {
+  void _showUserError(String title, String message) {
     Get.snackbar(
       title,
       message,
@@ -355,29 +375,29 @@ class KidFriendlyARController extends GetxController {
     }
   }
 
-  // 🔥 OPTIMIZED: Stop plane detection with ultra-fast settings
+  // 🔥 OPTIMIZED: Stop plane detection with optimized settings
   void _stopPlaneDetectionSmart() {
     if (isPlaneDetectionActive.value) {
       isPlaneDetectionActive.value = false;
       showVisualHelper.value = false;
-      
-      // 🔥 ULTRA-OPTIMIZED AR SETTINGS
+
+      // 🔥 OPTIMIZED AR SETTINGS
       arSessionManager?.onInitialize(
-        showFeaturePoints: false,        // ⚡ Disabled for maximum speed
+        showFeaturePoints: false, // ⚡ Disabled for maximum speed
         customPlaneTexturePath: AssetsCollection.logo,
-        showPlanes: true,               // Keep visible for user guidance
-        showWorldOrigin: false,         // ⚡ Disabled for speed
-        handlePans: false,              // ⚡ Disabled during placement
-        handleRotation: false,          // ⚡ Disabled during placement
-        showAnimatedGuide: false,       // ⚡ Disabled for maximum speed
-        handleTaps: true,               // ✅ Essential for placement
+        showPlanes: true, // Keep visible for user guidance
+        showWorldOrigin: false, // ⚡ Disabled for speed
+        handlePans: false, // ⚡ Disabled during placement
+        handleRotation: false, // ⚡ Disabled during placement
+        showAnimatedGuide: false, // ⚡ Disabled for maximum speed
+        handleTaps: true, // ✅ Essential for placement
       );
-      
-      print("🚀 ULTRA-FAST: Plane detection stopped with speed optimizations");
+
+      print("🚀 OPTIMIZED: Plane detection stopped with speed optimizations");
     }
   }
 
-  // 🔥 OPTIMIZED: Restart with ultra-fast settings
+  // 🔥 OPTIMIZED: Restart with optimized settings
   void _restartPlaneDetectionSmart() {
     if (!isPlaneDetectionActive.value) {
       isPlaneDetectionActive.value = true;
@@ -389,26 +409,26 @@ class KidFriendlyARController extends GetxController {
       detectionProgress.value = 0.0;
       detectionStatus.value = "Mencari permukaan stabil...";
       currentStatusColor.value = Colors.blue;
-      
+
       // 🔥 MAXIMUM PERFORMANCE SETTINGS
       arSessionManager?.onInitialize(
-        showFeaturePoints: false,       // ⚡ Disabled for maximum speed
+        showFeaturePoints: false, // ⚡ Disabled for maximum speed
         customPlaneTexturePath: AssetsCollection.logo,
-        showPlanes: true,              // Show during detection
-        showWorldOrigin: false,        // ⚡ Disabled for speed
-        handlePans: false,             // ⚡ Disabled during detection
-        handleRotation: false,         // ⚡ Disabled during detection
-        showAnimatedGuide: false,      // ⚡ Disabled for maximum speed
-        handleTaps: true,              // ✅ Essential for taps
+        showPlanes: true, // Show during detection
+        showWorldOrigin: false, // ⚡ Disabled for speed
+        handlePans: false, // ⚡ Disabled during detection
+        handleRotation: false, // ⚡ Disabled during detection
+        showAnimatedGuide: false, // ⚡ Disabled for maximum speed
+        handleTaps: true, // ✅ Essential for taps
       );
-      
-      _startStableKidFriendlyGuidance();
+
+      _startStableUserGuidance();
       _startTrackingQualityMonitor();
-      print("🚀 ULTRA-FAST: Plane detection restarted with speed optimizations");
+      print("🚀 OPTIMIZED: Plane detection restarted with speed optimizations");
     }
   }
 
-  // 🚀 ULTRA-OPTIMIZED: AR View Creation
+  // 🚀 OPTIMIZED: AR View Creation
   void onARViewCreated(
     ARSessionManager arSessionManager,
     ARObjectManager arObjectManager,
@@ -420,7 +440,7 @@ class KidFriendlyARController extends GetxController {
     this.arAnchorManager = arAnchorManager;
     this.arLocationManager = arLocationManager;
 
-    // 🚀 ULTRA-FAST initialization
+    // 🚀 OPTIMIZED initialization
     isPlaneDetectionInProgress.value = true;
     isPlaneDetectionActive.value = true;
     hasFoundGoodAnchor.value = false;
@@ -429,23 +449,23 @@ class KidFriendlyARController extends GetxController {
 
     // 🔥 MAXIMUM SPEED AR SETTINGS
     this.arSessionManager!.onInitialize(
-      showFeaturePoints: false,        // 🔥 DISABLED for maximum speed
+      showFeaturePoints: false, // 🔥 DISABLED for maximum speed
       customPlaneTexturePath: AssetsCollection.logo,
-      showPlanes: true,               // Show for user guidance
-      showWorldOrigin: false,         // 🔥 DISABLED for speed
-      handlePans: false,              // 🔥 DISABLED during detection
-      handleRotation: false,          // 🔥 DISABLED during detection
-      showAnimatedGuide: false,       // 🔥 DISABLED for maximum speed
-      handleTaps: true,               // ✅ Essential for placement
+      showPlanes: true, // Show for user guidance
+      showWorldOrigin: false, // 🔥 DISABLED for speed
+      handlePans: false, // 🔥 DISABLED during detection
+      handleRotation: false, // 🔥 DISABLED during detection
+      showAnimatedGuide: true, // 🔥 DISABLED for maximum speed
+      handleTaps: true, // ✅ Essential for placement
     );
 
     this.arObjectManager!.onInitialize();
 
-    // Set up ultra-fast callbacks
+    // Set up optimized callbacks
     this.arSessionManager!.onPlaneDetected = onPlaneDetectedStable;
     this.arSessionManager!.onPlaneOrPointTap = onPlaneOrPointTappedStable;
 
-    // Simplified gesture handling for kids
+    // Simplified gesture handling
     this.arObjectManager!.onPanStart = onPanStarted;
     this.arObjectManager!.onPanEnd = onPanEnded;
     this.arObjectManager!.onRotationStart = onRotationStarted;
@@ -457,32 +477,33 @@ class KidFriendlyARController extends GetxController {
     currentGuidanceMessage.value = "Kamera siap! Cari permukaan cepat! 🚀";
     currentGuidanceIcon.value = "📱";
 
-    print("🚀 ULTRA-FAST AR initialization complete!");
+    print("🚀 OPTIMIZED AR initialization complete!");
   }
 
-  // 🚀 ULTRA-OPTIMIZED: Plane detection callback
+  // 🚀 OPTIMIZED: Plane detection callback
   void onPlaneDetectedStable(int planeCount) {
     if (!isPlaneDetectionActive.value) return;
-    
+
     detectedPlanesCount.value = planeCount;
-    
-    print("🚀 ULTRA-FAST: Plane #${planeCount} detected");
-    
+
+    print("🚀 OPTIMIZED: Plane #${planeCount} detected");
+
     // 🔥 IMMEDIATE SUCCESS with just 1 plane!
     if (planeCount >= minPlanesForGoodTracking && !hasFoundGoodAnchor.value) {
       print("🚀 IMMEDIATE completion with ${planeCount} plane(s)!");
-      _completeUltraFastDetection();
+      _completeOptimizedDetection();
     }
   }
 
-  // 🚀 SIMPLIFIED: Ultra-fast hit result processing
+  // 🚀 SIMPLIFIED: Optimized hit result processing
   ARHitTestResult? _getStableHitResult(List<ARHitTestResult> hitTestResults) {
     if (hitTestResults.isEmpty) return null;
 
     // 🔥 PRIORITIZE PLANE HITS but be much more lenient
-    var planeHits = hitTestResults
-        .where((hit) => hit.type == ARHitTestResultType.plane)
-        .toList();
+    var planeHits =
+        hitTestResults
+            .where((hit) => hit.type == ARHitTestResultType.plane)
+            .toList();
 
     if (planeHits.isNotEmpty) {
       // 🔥 USE FIRST AVAILABLE PLANE HIT - no complex stability checks
@@ -495,23 +516,34 @@ class KidFriendlyARController extends GetxController {
     return hitTestResults.first;
   }
 
-  // 🚀 ULTRA-OPTIMIZED: Placement with minimal processing
-  Future<void> onPlaneOrPointTappedStable(List<ARHitTestResult> hitTestResults) async {
+  // 🚀 OPTIMIZED: Placement with minimal processing
+  Future<void> onPlaneOrPointTappedStable(
+    List<ARHitTestResult> hitTestResults,
+  ) async {
     // Basic validation
     if (selectedModelUrl.value.isEmpty) {
-      _showKidFriendlyError("🐾 Pilih hewan dulu ya!", "Tap pada gambar hewan di bawah 👇");
+      _showUserError(
+        "🐾 Pilih hewan dulu ya!",
+        "Tap pada gambar hewan di bawah 👇",
+      );
       return;
     }
 
     if (isModelPlaced.value) {
-      _showKidFriendlyError("🎯 Hewan sudah ada!", "Pakai tombol reset kalau mau ganti tempat 🔄");
+      _showUserError(
+        "🎯 Hewan sudah ada!",
+        "Pakai tombol reset kalau mau ganti tempat 🔄",
+      );
       return;
     }
 
     if (isLoading.value) return;
 
     if (hitTestResults.isEmpty) {
-      _showKidFriendlyError("🔍 Belum ketemu permukaan", "Coba arahkan kamera ke meja atau lantai 📱");
+      _showUserError(
+        "🔍 Belum ketemu permukaan",
+        "Coba arahkan kamera ke meja atau lantai 📱",
+      );
       return;
     }
 
@@ -522,20 +554,20 @@ class KidFriendlyARController extends GetxController {
       ARHitTestResult? stableHit = _getStableHitResult(hitTestResults);
 
       if (stableHit == null) {
-        _showKidFriendlyError("📱 Coba lagi ya!", "Sentuh layar sekali lagi");
+        _showUserError("📱 Coba lagi ya!", "Sentuh layar sekali lagi");
         isLoading.value = false;
         return;
       }
 
-      // 🔥 MINIMAL DELAY for ultra-fast placement
+      // 🔥 MINIMAL DELAY for optimized placement
       await Future.delayed(Duration(milliseconds: 10)); // Minimal delay
 
       // Create anchor immediately
       currentPlaneAnchor = ARPlaneAnchor(
         transformation: stableHit.worldTransform,
-        name: "UltraFastAnchor_${DateTime.now().millisecondsSinceEpoch}",
+        name: "OptimizedAnchor_${DateTime.now().millisecondsSinceEpoch}",
       );
-      
+
       bool? anchorAdded = await arAnchorManager!.addAnchor(currentPlaneAnchor!);
 
       if (anchorAdded == true) {
@@ -550,7 +582,7 @@ class KidFriendlyARController extends GetxController {
           ),
           position: vector.Vector3(0, 0, 0),
           rotation: vector.Vector4(1, 0, 0, 0),
-          name: "UltraFastNode_${selectedModelName.value}",
+          name: "OptimizedNode_${selectedModelName.value}",
         );
 
         bool? nodeAdded = await arObjectManager!.addNode(
@@ -561,32 +593,32 @@ class KidFriendlyARController extends GetxController {
         if (nodeAdded == true) {
           isModelPlaced.value = true;
           isInitialPlacement.value = false;
-          
+
           // 🔥 NOW hide planes after successful placement
           arSessionManager?.onInitialize(
             showFeaturePoints: false,
             customPlaneTexturePath: AssetsCollection.logo,
-            showPlanes: false,              // Hide after placement
+            showPlanes: false, // Hide after placement
             showWorldOrigin: false,
-            handlePans: true,               // Enable interaction
-            handleRotation: true,           // Enable interaction
+            handlePans: true, // Enable interaction
+            handleRotation: true, // Enable interaction
             showAnimatedGuide: false,
             handleTaps: true,
           );
-          
+
           // Stop detection timers
           _stabilizationTimer?.cancel();
           _planeDetectionTimeoutTimer?.cancel();
           _guidanceTimer?.cancel();
-          
+
           _startObjectStabilityMonitor();
 
           // Success feedback
           AdvancedHaptic.successPattern();
-          
+
           Get.snackbar(
-            "🎉 Ultra-Fast Success!",
-            "${selectedModelName.value} berhasil ditempatkan super cepat! 🚀",
+            "🎉 Optimized Success!",
+            "${selectedModelName.value} berhasil ditempatkan dengan cepat! 🚀",
             duration: Duration(seconds: 2),
             backgroundColor: Colors.green.withOpacity(0.9),
             colorText: Colors.white,
@@ -596,20 +628,20 @@ class KidFriendlyARController extends GetxController {
           );
 
           _updateGuidanceMessage("Berhasil! Object sudah stabil! 🎮", "🎉");
-          
-          print("🚀 ULTRA-FAST placement successful!");
+
+          print("🚀 OPTIMIZED placement successful!");
         } else {
           await arAnchorManager!.removeAnchor(currentPlaneAnchor!);
           currentPlaneAnchor = null;
           currentNode = null;
-          _showKidFriendlyError("😅 Ups, coba lagi ya!", "Sentuh layar sekali lagi");
+          _showUserError("😅 Ups, coba lagi ya!", "Sentuh layar sekali lagi");
         }
       } else {
-        _showKidFriendlyError("😅 Anchor gagal dibuat", "Coba sentuh area lain");
+        _showUserError("😅 Anchor gagal dibuat", "Coba sentuh area lain");
       }
     } catch (e) {
-      print("🚀 ULTRA-FAST placement error: $e");
-      _showKidFriendlyError("😅 Ada masalah", "Coba lagi ya!");
+      print("🚀 OPTIMIZED placement error: $e");
+      _showUserError("😅 Ada masalah", "Coba lagi ya!");
     } finally {
       isLoading.value = false;
     }
@@ -618,7 +650,8 @@ class KidFriendlyARController extends GetxController {
   // UNCHANGED: Object stability monitoring (simplified internally)
   void _startObjectStabilityMonitor() {
     _trackingMonitor?.cancel();
-    _trackingMonitor = Timer.periodic(Duration(milliseconds: 3000), (timer) { // 🔥 Less frequent for performance
+    _trackingMonitor = Timer.periodic(Duration(milliseconds: 3000), (timer) {
+      // 🔥 Less frequent for performance
       if (!isModelPlaced.value) {
         timer.cancel();
         return;
@@ -627,25 +660,26 @@ class KidFriendlyARController extends GetxController {
     });
     print("🚀 Object stability monitor started");
   }
-  
+
   int _consecutiveStableCount = 0;
   int _consecutiveUnstableCount = 0;
   final int _stableThresholdCount = 2; // 🔥 REDUCED: 2 vs 3
   final int _unstableThresholdCount = 4; // 🔥 REDUCED: 4 vs 5
   DateTime? _lastSnackbarTime;
-  
+
   void _checkObjectStability() {
     if (currentNode == null || currentPlaneAnchor == null) return;
-    
+
     try {
       // 🔥 SIMPLIFIED: More optimistic stability check
       bool isCurrentlyStable = _improvedTrackingQualityCheck();
-      
+
       if (isCurrentlyStable) {
         _consecutiveStableCount++;
         _consecutiveUnstableCount = 0;
-        
-        if (_consecutiveStableCount >= _stableThresholdCount && isTrackingLost.value) {
+
+        if (_consecutiveStableCount >= _stableThresholdCount &&
+            isTrackingLost.value) {
           isTrackingLost.value = false;
           trackingQuality.value = "Good";
           _showTrackingRecovered();
@@ -654,36 +688,37 @@ class KidFriendlyARController extends GetxController {
       } else {
         _consecutiveUnstableCount++;
         _consecutiveStableCount = 0;
-        
-        if (_consecutiveUnstableCount >= _unstableThresholdCount && !isTrackingLost.value) {
+
+        if (_consecutiveUnstableCount >= _unstableThresholdCount &&
+            !isTrackingLost.value) {
           isTrackingLost.value = true;
           trackingQuality.value = "Poor";
           _showTrackingWarning();
           _consecutiveUnstableCount = 0;
         }
       }
-      
     } catch (e) {
       print("⚠️ Stability check error: $e");
     }
   }
-  
+
   // 🔥 OPTIMIZED: More optimistic tracking quality
   bool _improvedTrackingQualityCheck() {
     double random = Random().nextDouble();
     // 🔥 95% chance stable for ultra-smooth experience
     return random > 0.05;
   }
-  
+
   void _showTrackingWarning() {
     DateTime now = DateTime.now();
-    if (_lastSnackbarTime != null && 
-        now.difference(_lastSnackbarTime!).inSeconds < 8) { // 🔥 Longer debounce
+    if (_lastSnackbarTime != null &&
+        now.difference(_lastSnackbarTime!).inSeconds < 8) {
+      // 🔥 Longer debounce
       return;
     }
-    
+
     _lastSnackbarTime = now;
-    
+
     Get.snackbar(
       "⚠️ Tracking Terganggu",
       "Arahkan kamera kembali ke permukaan yang sama",
@@ -692,19 +727,20 @@ class KidFriendlyARController extends GetxController {
       colorText: Colors.white,
       snackPosition: SnackPosition.TOP,
     );
-    
+
     HapticHelper.mediumImpact();
   }
-  
+
   void _showTrackingRecovered() {
     DateTime now = DateTime.now();
-    if (_lastSnackbarTime != null && 
-        now.difference(_lastSnackbarTime!).inSeconds < 4) { // 🔥 Longer debounce
+    if (_lastSnackbarTime != null &&
+        now.difference(_lastSnackbarTime!).inSeconds < 4) {
+      // 🔥 Longer debounce
       return;
     }
-    
+
     _lastSnackbarTime = now;
-    
+
     Get.snackbar(
       "✅ Tracking Pulih",
       "Object kembali stabil!",
@@ -713,39 +749,42 @@ class KidFriendlyARController extends GetxController {
       colorText: Colors.white,
       snackPosition: SnackPosition.TOP,
     );
-    
+
     HapticHelper.lightImpact();
   }
 
   // 🔥 OPTIMIZED: Simplified tracking quality monitoring
   void _startTrackingQualityMonitor() {
     _trackingMonitor?.cancel();
-    _trackingMonitor = Timer.periodic(Duration(milliseconds: 4000), (timer) { // 🔥 Less frequent
+    _trackingMonitor = Timer.periodic(Duration(milliseconds: 4000), (timer) {
+      // 🔥 Less frequent
       _updateTrackingQuality();
     });
   }
-  
+
   void _updateTrackingQuality() {
     String quality = "Unknown";
-    
+
     // 🔥 SIMPLIFIED: Less complex quality assessment
-    if (detectedPlanesCount.value >= 1 && isTrackingStable.value && !isTrackingLost.value) {
+    if (detectedPlanesCount.value >= 1 &&
+        isTrackingStable.value &&
+        !isTrackingLost.value) {
       quality = "Excellent";
     } else if (detectedPlanesCount.value >= 1 && !isTrackingLost.value) {
       quality = "Good";
     } else {
       quality = "Poor";
     }
-    
+
     if (trackingQuality.value != quality) {
       trackingQuality.value = quality;
     }
   }
 
-  // 🚀 ULTRA-FAST: Scaling with minimal processing
+  // 🚀 OPTIMIZED: Scaling with minimal processing
   void changeScale(bool increase) {
     if (!isModelPlaced.value || currentNode == null) {
-      _showKidFriendlyError("🐾 Belum ada hewan", "Tempatkan hewan dulu ya!");
+      _showUserError("🐾 Belum ada hewan", "Tempatkan hewan dulu ya!");
       return;
     }
 
@@ -765,7 +804,7 @@ class KidFriendlyARController extends GetxController {
       if (newScale != currentScale.value) {
         arObjectManager!.removeNode(currentNode!);
 
-        // 🔥 ULTRA-FAST: Minimal delay for immediate scaling
+        // 🔥 OPTIMIZED: Minimal delay for immediate scaling
         Future.delayed(Duration(milliseconds: 20), () {
           ARNode newNode = ARNode(
             type: NodeType.webGLB,
@@ -773,39 +812,41 @@ class KidFriendlyARController extends GetxController {
             scale: vector.Vector3(newScale, newScale, newScale),
             position: vector.Vector3(0, 0, 0),
             rotation: vector.Vector4(1, 0, 0, 0),
-            name: "UltraFastNode_${selectedModelName.value}",
+            name: "OptimizedNode_${selectedModelName.value}",
           );
 
-          arObjectManager!.addNode(newNode, planeAnchor: currentPlaneAnchor).then((success) {
-            if (success == true) {
-              currentNode = newNode;
-              currentScale.value = newScale;
+          arObjectManager!
+              .addNode(newNode, planeAnchor: currentPlaneAnchor)
+              .then((success) {
+                if (success == true) {
+                  currentNode = newNode;
+                  currentScale.value = newScale;
 
-              HapticHelper.selectionClick();
-              
-              Get.snackbar(
-                increase ? "🔍 Lebih Besar!" : "🔍 Lebih Kecil!",
-                "Ukuran: ${(newScale * 100).toInt()}%",
-                duration: Duration(milliseconds: 800),
-                backgroundColor: Colors.blue.withOpacity(0.8),
-                colorText: Colors.white,
-                snackPosition: SnackPosition.BOTTOM,
-                borderRadius: 15,
-              );
-            }
-            isLoading.value = false;
-          });
+                  HapticHelper.selectionClick();
+
+                  Get.snackbar(
+                    increase ? "🔍 Lebih Besar!" : "🔍 Lebih Kecil!",
+                    "Ukuran: ${(newScale * 100).toInt()}%",
+                    duration: Duration(milliseconds: 800),
+                    backgroundColor: Colors.blue.withOpacity(0.8),
+                    colorText: Colors.white,
+                    snackPosition: SnackPosition.BOTTOM,
+                    borderRadius: 15,
+                  );
+                }
+                isLoading.value = false;
+              });
         });
       } else {
         isLoading.value = false;
       }
     } catch (e) {
-      print("🚀 Ultra-fast scale error: $e");
+      print("🚀 Optimized scale error: $e");
       isLoading.value = false;
     }
   }
 
-  // 🚀 ULTRA-FAST: Reset with minimal processing
+  // 🚀 OPTIMIZED: Reset with minimal processing
   void resetModel() {
     resetModelStable();
   }
@@ -825,11 +866,11 @@ class KidFriendlyARController extends GetxController {
       isTrackingStable.value = false;
       isTrackingLost.value = false;
       trackingQuality.value = "Unknown";
-      
+
       _consecutiveStableCount = 0;
       _consecutiveUnstableCount = 0;
       _lastSnackbarTime = null;
-      
+
       _trackingMonitor?.cancel();
       isInitialPlacement.value = true;
 
@@ -838,7 +879,7 @@ class KidFriendlyARController extends GetxController {
         currentNode = null;
       }
 
-      // 🔥 MINIMAL delay for ultra-fast reset
+      // 🔥 MINIMAL delay for optimized reset
       Future.delayed(Duration(milliseconds: 20), () {
         if (currentPlaneAnchor != null) {
           arAnchorManager?.removeAnchor(currentPlaneAnchor!);
@@ -847,14 +888,14 @@ class KidFriendlyARController extends GetxController {
 
         isModelPlaced.value = false;
         currentScale.value = 0.6;
-        
+
         _restartPlaneDetectionSmart();
 
         HapticHelper.mediumImpact();
-        
+
         Get.snackbar(
-          "🔄 Reset Ultra-Fast!",
-          "Siap untuk tracking super cepat! 🚀",
+          "🔄 Reset Optimized!",
+          "Siap untuk tracking yang cepat! 🚀",
           duration: Duration(seconds: 1),
           backgroundColor: Colors.blue.withOpacity(0.8),
           colorText: Colors.white,
@@ -862,13 +903,13 @@ class KidFriendlyARController extends GetxController {
           borderRadius: 15,
         );
 
-        _updateGuidanceMessage("Ayo cari tracking super cepat! 🚀", "🔍");
+        _updateGuidanceMessage("Ayo cari tracking yang cepat! 🚀", "🔍");
         isLoading.value = false;
-        
-        print("🚀 ULTRA-FAST reset complete!");
+
+        print("🚀 OPTIMIZED reset complete!");
       });
     } catch (e) {
-      print("🚀 Ultra-fast reset error: $e");
+      print("🚀 Optimized reset error: $e");
       isLoading.value = false;
     }
   }
@@ -877,7 +918,7 @@ class KidFriendlyARController extends GetxController {
   void onPanStarted(String nodeName) {
     print("🚀 Kid started moving: $nodeName");
     HapticHelper.lightImpact();
-    
+
     Get.snackbar(
       "👆 Geser Hewan!",
       "Seret untuk memindahkan posisi",
@@ -896,7 +937,7 @@ class KidFriendlyARController extends GetxController {
   void onRotationStarted(String nodeName) {
     print("🚀 Kid started rotating: $nodeName");
     HapticHelper.lightImpact();
-    
+
     Get.snackbar(
       "🔄 Putar Hewan!",
       "Putar dengan dua jari",

@@ -3,14 +3,13 @@ import 'package:get/get.dart';
 import 'package:ar_flutter_plugin_2/ar_flutter_plugin.dart';
 import 'package:ar_flutter_plugin_2/datatypes/config_planedetection.dart';
 import 'camera_controller.dart';
-import 'widgets/model_item.dart';
 
-class KidFriendlyCameraPage extends StatelessWidget {
-  const KidFriendlyCameraPage({Key? key}) : super(key: key);
+class CameraPage extends StatelessWidget {
+  const CameraPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(KidFriendlyARController());
+    final controller = Get.put(CameraController());
 
     return Scaffold(
       body: Stack(
@@ -25,8 +24,8 @@ class KidFriendlyCameraPage extends StatelessWidget {
           SafeArea(
             child: Column(
               children: [
-                // Top navigation with kid-friendly design
-                _buildKidFriendlyTopBar(controller),
+                // Top navigation with user-friendly design
+                _buildTopBar(controller),
 
                 // Flexible guidance system that adapts to available space
                 Flexible(
@@ -34,14 +33,14 @@ class KidFriendlyCameraPage extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Kid-friendly guidance system with progress
-                      _buildKidGuidanceSystem(controller),
+                      // User-friendly guidance system with progress
+                      _buildGuidanceSystem(controller),
 
                       // Success celebration overlay
                       _buildSuccessCelebration(controller),
 
-                      // Kid-friendly loading indicator
-                      _buildKidFriendlyLoading(controller),
+                      // User-friendly loading indicator
+                      _buildLoadingIndicator(controller),
                     ],
                   ),
                 ),
@@ -49,23 +48,23 @@ class KidFriendlyCameraPage extends StatelessWidget {
                 // Flexible spacer that adapts to content
                 const Expanded(child: SizedBox()),
 
-                // Kid-friendly control buttons - only show when model is placed
-                _buildKidFriendlyControls(controller),
+                // User-friendly control buttons - only show when model is placed
+                _buildControlButtons(controller),
 
                 // Fixed height bottom section for animal list
-                _buildKidFriendlyModelList(controller),
+                _buildModelList(controller),
               ],
             ),
           ),
 
-          // Floating help button for kids
+          // Floating help button
           _buildFloatingHelpButton(controller),
         ],
       ),
     );
   }
 
-  Widget _buildKidFriendlyTopBar(KidFriendlyARController controller) {
+  Widget _buildTopBar(CameraController controller) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -99,7 +98,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
 
           const Spacer(),
 
-          // AR status indicator for kids
+          // AR status indicator
           Obx(
             () => Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -130,7 +129,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
     );
   }
 
-  Widget _buildKidGuidanceSystem(KidFriendlyARController controller) {
+  Widget _buildGuidanceSystem(CameraController controller) {
     return Obx(() {
       // Show different guidance based on state
       if (controller.isPlaneDetectionInProgress.value) {
@@ -147,7 +146,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
     });
   }
 
-  Widget _buildPlaneDetectionGuidance(KidFriendlyARController controller) {
+  Widget _buildPlaneDetectionGuidance(CameraController controller) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
@@ -191,7 +190,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          // Kid-friendly progress bar
+          // Progress bar
           Obx(
             () => Column(
               children: [
@@ -244,7 +243,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
           SizedBox(width: 12),
           Expanded(
             child: Text(
-              "Bagus! Sekarang pilih hewan favorit kamu di bawah! 👇",
+              "Bagus! Sekarang pilih hewan favorit Anda di bawah! 👇",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 14,
@@ -257,7 +256,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPlacementGuidance(KidFriendlyARController controller) {
+  Widget _buildPlacementGuidance(CameraController controller) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(12),
@@ -288,7 +287,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSuccessCelebration(KidFriendlyARController controller) {
+  Widget _buildSuccessCelebration(CameraController controller) {
     return Obx(
       () =>
           controller.isModelPlaced.value
@@ -326,7 +325,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
     );
   }
 
-  Widget _buildKidFriendlyControls(KidFriendlyARController controller) {
+  Widget _buildControlButtons(CameraController controller) {
     return Obx(
       () =>
           controller.isModelPlaced.value
@@ -338,21 +337,21 @@ class KidFriendlyCameraPage extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildKidControlButton(
+                    _buildControlButton(
                       icon: Icons.remove_circle,
                       emoji: "🔍",
                       label: "Kecilkan",
                       color: Colors.red[400]!,
                       onTap: () => controller.changeScale(false),
                     ),
-                    _buildKidControlButton(
+                    _buildControlButton(
                       icon: Icons.refresh,
                       emoji: "🔄",
                       label: "Ulang",
                       color: Colors.blue[400]!,
                       onTap: controller.resetModel,
                     ),
-                    _buildKidControlButton(
+                    _buildControlButton(
                       icon: Icons.add_circle,
                       emoji: "🔍",
                       label: "Besarkan",
@@ -366,7 +365,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
     );
   }
 
-  Widget _buildKidControlButton({
+  Widget _buildControlButton({
     required IconData icon,
     required String emoji,
     required String label,
@@ -411,7 +410,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
     );
   }
 
-  Widget _buildKidFriendlyLoading(KidFriendlyARController controller) {
+  Widget _buildLoadingIndicator(CameraController controller) {
     return Obx(
       () =>
           !controller.isARInitialized.value
@@ -438,7 +437,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
                     ),
                     SizedBox(height: 12),
                     Text(
-                      "Menyiapkan Kamera Ajaib...",
+                      "Menyiapkan Kamera AR...",
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -457,7 +456,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
     );
   }
 
-  Widget _buildKidFriendlyModelList(KidFriendlyARController controller) {
+  Widget _buildModelList(CameraController controller) {
     return Container(
       constraints: const BoxConstraints(
         minHeight: 110,
@@ -487,7 +486,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Compact category header for kids
+          // Compact category header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
@@ -527,7 +526,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 12),
                   child: GestureDetector(
                     onTap: () => controller.onModelTap(index),
-                    child: _buildKidFriendlyModelItem(
+                    child: _buildModelItem(
                       model: model,
                       isSelected: isSelected,
                     ),
@@ -544,7 +543,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
     );
   }
 
-  Widget _buildKidFriendlyModelItem({
+  Widget _buildModelItem({
     required Map<String, dynamic> model,
     required bool isSelected,
   }) {
@@ -648,7 +647,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
     );
   }
 
-  Widget _buildFloatingHelpButton(KidFriendlyARController controller) {
+  Widget _buildFloatingHelpButton(CameraController controller) {
     return Positioned(
       right: 20,
       top: MediaQuery.of(Get.context!).size.height * 0.4,
@@ -656,12 +655,12 @@ class KidFriendlyCameraPage extends StatelessWidget {
         mini: true,
         backgroundColor: Colors.orange.withOpacity(0.9),
         child: const Text("❓", style: TextStyle(fontSize: 18)),
-        onPressed: () => _showKidHelpDialog(),
+        onPressed: () => _showHelpDialog(),
       ),
     );
   }
 
-  void _showKidHelpDialog() {
+  void _showHelpDialog() {
     Get.dialog(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -669,7 +668,7 @@ class KidFriendlyCameraPage extends StatelessWidget {
         content: const Text(
           "1. 📱 Arahkan kamera ke meja atau lantai\n"
           "2. 🔍 Tunggu sampai permukaan terdeteksi\n"
-          "3. 🎯 Pilih hewan favorit kamu\n"
+          "3. 🎯 Pilih hewan favorit Anda\n"
           "4. 👆 Sentuh layar untuk menempatkan hewan\n"
           "5. 🎮 Geser atau putar hewannya!",
           style: TextStyle(fontSize: 14),

@@ -31,7 +31,7 @@ class HomePage extends StatelessWidget {
               // Responsive Carousel Fakta Hewan
               _buildFactsCarousel(controller, screenWidth, isTablet),
 
-              SizedBox(height: _responsiveHeight(24, screenHeight)),
+              SizedBox(height: _responsiveHeight(5, screenHeight)),
 
               // Responsive Section title for Learning Animals
               _buildSectionTitle(
@@ -42,7 +42,7 @@ class HomePage extends StatelessWidget {
                 isTablet: isTablet,
               ),
 
-              SizedBox(height: _responsiveHeight(16, screenHeight)),
+              SizedBox(height: _responsiveHeight(5, screenHeight)),
 
               // Responsive Featured section - Pengenalan Hewan
               _buildFeaturedSection(
@@ -52,9 +52,6 @@ class HomePage extends StatelessWidget {
                 isTablet,
               ),
 
-              SizedBox(height: _responsiveHeight(24, screenHeight)),
-
-              // Responsive Section title for Tanya Jawab
               _buildSectionTitle(
                 title: "Tanya Jawab",
                 icon: Icons.question_answer,
@@ -63,7 +60,7 @@ class HomePage extends StatelessWidget {
                 isTablet: isTablet,
               ),
 
-              SizedBox(height: _responsiveHeight(16, screenHeight)),
+              SizedBox(height: _responsiveHeight(5, screenHeight)),
 
               // Responsive Quiz Grid
               _buildResponsiveQuizGrid(
@@ -240,7 +237,7 @@ class HomePage extends StatelessWidget {
     bool isTablet,
   ) {
     double baseHeight =
-        isTablet ? 240 : 200; // Increased base heights significantly
+        isTablet ? 240 : 180; // Increased base heights significantly
 
     // Adjust for screen height - more generous spacing
     if (screenHeight < 600) {
@@ -251,7 +248,7 @@ class HomePage extends StatelessWidget {
       baseHeight = isTablet ? 220 : 185;
     } else if (screenHeight > 800) {
       // Tall screens - can afford much more space
-      baseHeight = isTablet ? 280 : 240;
+      baseHeight = isTablet ? 280 : 200;
     }
 
     // Additional adjustment for very wide screens
@@ -969,8 +966,8 @@ class HomePage extends StatelessWidget {
                   shadows: [
                     Shadow(
                       offset: Offset(1, 1),
-                      blurRadius: 2,
-                      color: Color.fromRGBO(0, 0, 0, 0.2),
+                      blurRadius: 1.5,
+                      color: Color.fromRGBO(0, 0, 0, 1.5),
                     ),
                   ],
                 ),
@@ -985,7 +982,7 @@ class HomePage extends StatelessWidget {
                   height: 1.2,
                   shadows: [
                     Shadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withOpacity(1),
                       blurRadius: 1.5,
                       offset: Offset(0.5, 0.5),
                     ),

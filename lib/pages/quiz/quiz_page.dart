@@ -182,10 +182,13 @@ class QuizPage extends StatelessWidget {
                               GetBuilder<QuizController>(
                                 id: 'quiz_body',
                                 builder: (controller) {
-                                  double progress = controller.questions.isEmpty 
-                                      ? 0.0 
-                                      : (controller.currentQuestionIndex + 1) / controller.questions.length;
-                                  
+                                  double progress =
+                                      controller.questions.isEmpty
+                                          ? 0.0
+                                          : (controller.currentQuestionIndex +
+                                                  1) /
+                                              controller.questions.length;
+
                                   return Container(
                                     width: 80,
                                     height: 4,
@@ -199,7 +202,9 @@ class QuizPage extends StatelessWidget {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: Colors.blue,
-                                          borderRadius: BorderRadius.circular(2),
+                                          borderRadius: BorderRadius.circular(
+                                            2,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -210,6 +215,51 @@ class QuizPage extends StatelessWidget {
                           ),
                         ),
                         // ============ END MODIFIKASI ============
+
+                        // ============ TAMBAHAN: Timer Display ============
+                        GetBuilder<QuizController>(
+                          id: 'timer',
+                          builder:
+                              (controller) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                margin: const EdgeInsets.only(left: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.2),
+                                      spreadRadius: 1,
+                                      blurRadius: 3,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.timer,
+                                      color: Colors.blue,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      controller.getFormattedElapsedTime(),
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                        ),
+                        // ============ END TAMBAHAN ============
                       ],
                     ),
                   ),
@@ -513,11 +563,10 @@ class QuizPage extends StatelessWidget {
                                         ],
                                       ),
                                       const SizedBox(height: 8),
-                                      // Timer indicator (optional)
+                                      // Timer indicator (real-time update)
                                       GetBuilder<QuizController>(
-                                        id: 'quiz_body',
+                                        id: 'timer',
                                         builder: (controller) {
-                                          final elapsed = DateTime.now().difference(controller.startTime).inSeconds;
                                           return Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
@@ -528,7 +577,8 @@ class QuizPage extends StatelessWidget {
                                               ),
                                               const SizedBox(width: 4),
                                               Text(
-                                                '${elapsed ~/ 60}:${(elapsed % 60).toString().padLeft(2, '0')}',
+                                                controller
+                                                    .getFormattedElapsedTime(),
                                                 style: TextStyle(
                                                   fontSize: 14,
                                                   color: Colors.grey[600],
@@ -542,8 +592,8 @@ class QuizPage extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                // ============ END MODIFIKASI ============
 
+                                // ============ END MODIFIKASI ============
                                 const SizedBox(height: 40),
                               ],
                             ),

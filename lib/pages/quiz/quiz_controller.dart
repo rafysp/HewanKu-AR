@@ -3,6 +3,7 @@ import 'package:flutter_application_2/pages/quiz/widgets/animal_info_dialog.dart
 import 'package:flutter_application_2/pages/score_tracking/score_controller.dart'; // TAMBAHAN: Import score controller
 import 'package:get/get.dart';
 import 'dart:math';
+import 'dart:async'; // TAMBAHAN: Import untuk Timer
 
 enum QuizType { tebakGambar, kategoriHewan, habitatHewan, puzzleHewan }
 
@@ -47,6 +48,8 @@ class QuizController extends GetxController {
   // ============ TAMBAHAN: Score Tracking Variables ============
   late ScoreController scoreController;
   late DateTime startTime;
+  Timer? _timer; // TAMBAHAN: Timer untuk update UI
+  final RxInt elapsedSeconds = 0.obs; // TAMBAHAN: Reactive elapsed time
   // ============ END TAMBAHAN ============
 
   // Observable variables
@@ -71,7 +74,10 @@ class QuizController extends GetxController {
 
   set score(int value) {
     _score = value;
-    update(['quiz_body', 'score']); // PERBAIKAN: Tambahkan 'score' untuk update UI
+    update([
+      'quiz_body',
+      'score',
+    ]); // PERBAIKAN: Tambahkan 'score' untuk update UI
   }
 
   bool _isAnswered = false;
@@ -298,16 +304,35 @@ class QuizController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    
+
     // ============ TAMBAHAN: Inisialisasi Score Tracking ============
     scoreController = Get.find<ScoreController>();
     startTime = DateTime.now();
     // ============ END TAMBAHAN ============
-    
+
+    // ============ TAMBAHAN: Start timer untuk update UI ============
+    _startTimer();
+    // ============ END TAMBAHAN ============
+
     generateAllQuestions();
     selectRandomQuestions();
     loadQuestion();
   }
+
+  // ============ TAMBAHAN: Timer methods ============
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      elapsedSeconds.value = DateTime.now().difference(startTime).inSeconds;
+      update(['timer']); // Update timer UI khusus
+    });
+  }
+
+  @override
+  void onClose() {
+    _timer?.cancel();
+    super.onClose();
+  }
+  // ============ END TAMBAHAN ============
 
   List<Map<String, dynamic>> get allAnimals => [
     ...vertebrateAnimals,
@@ -846,13 +871,13 @@ class QuizController extends GetxController {
   void showQuizResult() {
     // TAMBAHAN: Hitung durasi quiz dalam detik
     final duration = DateTime.now().difference(startTime).inSeconds;
-    
+
     // TAMBAHAN: Hitung persentase untuk sistem 0-100
     double percentage = (score / questions.length) * 100;
-    
+
     // TAMBAHAN: Simpan score ke tracking system
     _saveCurrentScore(duration);
-    
+
     // Pilih emoji berdasarkan skor
     String emoji = '';
     String message = '';
@@ -910,7 +935,7 @@ class QuizController extends GetxController {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              
+
               // ============ TAMBAHAN: Score Box dengan sistem 0-100 ============
               Container(
                 padding: const EdgeInsets.all(16),
@@ -932,8 +957,12 @@ class QuizController extends GetxController {
                       style: TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
-                        color: percentage >= 80 ? Colors.green : 
-                               percentage >= 60 ? Colors.orange : Colors.red,
+                        color:
+                            percentage >= 80
+                                ? Colors.green
+                                : percentage >= 60
+                                ? Colors.orange
+                                : Colors.red,
                       ),
                     ),
                     Text(
@@ -947,24 +976,18 @@ class QuizController extends GetxController {
                     const SizedBox(height: 8),
                     Text(
                       'Benar $score dari ${questions.length} soal',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Waktu: ${_formatDuration(duration)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[500],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Skor dengan bintang - maksimal 2 baris
               Wrap(
                 alignment: WrapAlignment.center,
@@ -978,9 +1001,9 @@ class QuizController extends GetxController {
                   );
                 }),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // ============ MODIFIKASI: Tombol dengan riwayat (commented out) ============
               Row(
                 children: [
@@ -1012,7 +1035,6 @@ class QuizController extends GetxController {
                   ),
                   const SizedBox(width: 12),
                   */
-                  
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
@@ -1076,6 +1098,12 @@ class QuizController extends GetxController {
     currentQuestionIndex = 0;
     score = 0; // PERBAIKAN: Ini akan update UI score indicator
     startTime = DateTime.now(); // TAMBAHAN: Reset waktu mulai
+    elapsedSeconds.value = 0; // TAMBAHAN: Reset elapsed time
+
+    // TAMBAHAN: Restart timer
+    _timer?.cancel();
+    _startTimer();
+
     // Generate new random questions when resetting
     selectRandomQuestions();
     loadQuestion();
@@ -1102,7 +1130,7 @@ class QuizController extends GetxController {
   Future<void> _saveCurrentScore(int duration) async {
     String categoryName = '';
     String quizTypeName = '';
-    
+
     switch (quizType) {
       case QuizType.tebakGambar:
         categoryName = 'Tebak Gambar Hewan';
@@ -1140,4 +1168,14 @@ class QuizController extends GetxController {
       return '${minutes}m ${remainingSeconds}d';
     }
   }
+
+  // ============ TAMBAHAN: Get formatted elapsed time untuk UI ============
+  String getFormattedElapsedTime() {
+    final elapsed = elapsedSeconds.value;
+    final minutes = elapsed ~/ 60;
+    final seconds = elapsed % 60;
+    return '${minutes}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  // ============ END TAMBAHAN ============
 }

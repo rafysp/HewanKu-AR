@@ -112,6 +112,6 @@ class HomeController extends GetxController {
   }
 
   void navigateToCameraPage() { 
-    Get.to(() => KidFriendlyCameraPage());
+    Get.to(() => CameraPage());
   }
 }
