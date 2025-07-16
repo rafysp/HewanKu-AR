@@ -127,7 +127,8 @@ class HabitatDragQuizPage extends StatelessWidget {
                             double progress =
                                 controller.questions.isEmpty
                                     ? 0.0
-                                    : (controller.currentQuestionIndex.value + 1) /
+                                    : (controller.currentQuestionIndex.value +
+                                            1) /
                                         controller.questions.length;
 
                             return Container(
@@ -180,7 +181,7 @@ class HabitatDragQuizPage extends StatelessWidget {
 
                             // Draggable animal image with flexible height
                             Container(
-                              height: MediaQuery.of(context).size.height * 0.35,
+                              height: MediaQuery.of(context).size.height * 0.31,
                               padding: const EdgeInsets.all(16.0),
                               child: _buildDraggableAnimal(controller),
                             ),
@@ -208,10 +209,12 @@ class HabitatDragQuizPage extends StatelessWidget {
                                       scrollDirection: Axis.horizontal,
                                       itemCount: controller.habitats.length,
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 20, // Increased from 16 to 20
+                                        horizontal:
+                                            20, // Increased from 16 to 20
                                       ),
                                       itemBuilder: (context, index) {
-                                        final habitat = controller.habitats[index];
+                                        final habitat =
+                                            controller.habitats[index];
                                         return _buildHabitatDropTarget(
                                           habitat,
                                           controller,
@@ -287,31 +290,30 @@ class HabitatDragQuizPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Obx(() => Text(
-                      "Di mana ${controller.currentQuestion?.name ?? 'hewan ini'} hidup?",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Color.fromRGBO(99, 99, 99, 1),
+                    Obx(
+                      () => Text(
+                        "Di mana ${controller.currentQuestion?.name ?? 'hewan ini'} hidup?",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Color.fromRGBO(99, 99, 99, 1),
+                        ),
                       ),
-                    )),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Simple rules reminder
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Color.fromRGBO(240, 248, 255, 1.0),
               borderRadius: BorderRadius.circular(15),
-              border: Border.all(
-                color: Colors.blue.withOpacity(0.3),
-                width: 1,
-              ),
+              border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
             ),
             child: Column(
               children: [
@@ -421,7 +423,9 @@ class HabitatDragQuizPage extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: _getHintBorderColor(controller.currentHintLevel.value),
+                      color: _getHintBorderColor(
+                        controller.currentHintLevel.value,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -466,17 +470,13 @@ class HabitatDragQuizPage extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.lightbulb_outline,
-                size: 20,
-                color: Colors.white,
-              ),
+              Icon(Icons.lightbulb_outline, size: 20, color: Colors.white),
               const SizedBox(width: 8),
               Text(
-                controller.currentHintLevel.value == 0 
-                    ? 'Butuh Bantuan?' 
-                    : controller.currentHintLevel.value < 3 
-                    ? 'Bantuan Lagi?' 
+                controller.currentHintLevel.value == 0
+                    ? 'Butuh Bantuan?'
+                    : controller.currentHintLevel.value < 3
+                    ? 'Bantuan Lagi?'
                     : 'Lihat Jawaban',
                 style: TextStyle(
                   fontSize: 16,
@@ -515,17 +515,18 @@ class HabitatDragQuizPage extends StatelessWidget {
             children: List.generate(controller.totalQuestions.value, (index) {
               bool isCompleted = index < controller.currentQuestionIndex.value;
               bool isCurrent = index == controller.currentQuestionIndex.value;
-              
+
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: isCompleted 
-                      ? Colors.green
-                      : isCurrent 
-                      ? Colors.blue
-                      : Colors.grey.withOpacity(0.3),
+                  color:
+                      isCompleted
+                          ? Colors.green
+                          : isCurrent
+                          ? Colors.blue
+                          : Colors.grey.withOpacity(0.3),
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: isCurrent ? Colors.blue : Colors.transparent,
@@ -533,50 +534,46 @@ class HabitatDragQuizPage extends StatelessWidget {
                   ),
                 ),
                 child: Center(
-                  child: isCompleted
-                      ? Icon(
-                          Icons.check,
-                          color: Colors.white,
-                          size: 16,
-                        )
-                      : Text(
-                          '${index + 1}',
-                          style: TextStyle(
-                            color: isCurrent ? Colors.white : Colors.grey[600],
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                  child:
+                      isCompleted
+                          ? Icon(Icons.check, color: Colors.white, size: 16)
+                          : Text(
+                            '${index + 1}',
+                            style: TextStyle(
+                              color:
+                                  isCurrent ? Colors.white : Colors.grey[600],
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
-                        ),
                 ),
               );
             }),
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Progress text
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.emoji_events,
-                color: Colors.amber,
-                size: 20,
-              ),
+              Icon(Icons.emoji_events, color: Colors.amber, size: 20),
               const SizedBox(width: 8),
-              Obx(() => Text(
-                'Soal ${controller.currentQuestionIndex.value + 1} dari ${controller.totalQuestions.value}',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blueGrey[700],
+              Obx(
+                () => Text(
+                  'Soal ${controller.currentQuestionIndex.value + 1} dari ${controller.totalQuestions.value}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueGrey[700],
+                  ),
                 ),
-              )),
+              ),
             ],
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Score display
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -586,9 +583,10 @@ class HabitatDragQuizPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 2),
                   child: Icon(
                     Icons.star,
-                    color: index < controller.correctAnswers.value 
-                        ? Colors.amber 
-                        : Colors.grey[300],
+                    color:
+                        index < controller.correctAnswers.value
+                            ? Colors.amber
+                            : Colors.grey[300],
                     size: 20,
                   ),
                 );
@@ -684,10 +682,11 @@ class HabitatDragQuizPage extends StatelessWidget {
                     if (loadingProgress == null) return child;
                     return Center(
                       child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                            : null,
+                        value:
+                            loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
                         strokeWidth: 3,
                         color: Color.fromRGBO(33, 150, 243, 1.0),
                       ),
@@ -775,12 +774,21 @@ class HabitatDragQuizPage extends StatelessWidget {
                                     width: 50,
                                     height: 50,
                                     child: CircularProgressIndicator(
-                                      value: loadingProgress.expectedTotalBytes != null
-                                          ? loadingProgress.cumulativeBytesLoaded /
-                                              loadingProgress.expectedTotalBytes!
-                                          : null,
+                                      value:
+                                          loadingProgress.expectedTotalBytes !=
+                                                  null
+                                              ? loadingProgress
+                                                      .cumulativeBytesLoaded /
+                                                  loadingProgress
+                                                      .expectedTotalBytes!
+                                              : null,
                                       strokeWidth: 4,
-                                      backgroundColor: Color.fromRGBO(200, 230, 201, 0.5),
+                                      backgroundColor: Color.fromRGBO(
+                                        200,
+                                        230,
+                                        201,
+                                        0.5,
+                                      ),
                                       color: Color.fromRGBO(76, 175, 80, 0.8),
                                     ),
                                   ),
@@ -815,7 +823,9 @@ class HabitatDragQuizPage extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
                                   child: Text(
                                     "Gambar tidak tersedia",
                                     style: TextStyle(
@@ -837,7 +847,10 @@ class HabitatDragQuizPage extends StatelessWidget {
                   Flexible(
                     flex: 1,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       child: Text(
                         "Tarik ${controller.currentQuestion!.name} ke habitatnya!",
                         style: TextStyle(
@@ -882,21 +895,24 @@ class HabitatDragQuizPage extends StatelessWidget {
                 offset: const Offset(0, 2),
               ),
             ],
-            border: controller.currentAnimalHabitat.value == habitat.name
-                ? Border.all(
-                    color: Color.fromRGBO(255, 255, 255, 1.0),
-                    width: 3,
-                  )
-                : isHighlighted
+            border:
+                controller.currentAnimalHabitat.value == habitat.name
                     ? Border.all(
-                        color: Color.fromRGBO(255, 255, 255, 0.8),
-                        width: 2,
-                        style: BorderStyle.solid,
-                      )
+                      color: Color.fromRGBO(255, 255, 255, 1.0),
+                      width: 3,
+                    )
+                    : isHighlighted
+                    ? Border.all(
+                      color: Color.fromRGBO(255, 255, 255, 0.8),
+                      width: 2,
+                      style: BorderStyle.solid,
+                    )
                     : null,
           ),
           child: Padding(
-            padding: const EdgeInsets.all(8.0), // Added padding inside container
+            padding: const EdgeInsets.all(
+              8.0,
+            ), // Added padding inside container
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
@@ -921,10 +937,13 @@ class HabitatDragQuizPage extends StatelessWidget {
                               if (loadingProgress == null) return child;
                               return Center(
                                 child: CircularProgressIndicator(
-                                  value: loadingProgress.expectedTotalBytes != null
-                                      ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
-                                      : null,
+                                  value:
+                                      loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress
+                                                  .cumulativeBytesLoaded /
+                                              loadingProgress
+                                                  .expectedTotalBytes!
+                                          : null,
                                   strokeWidth: 2,
                                   color: habitat.color,
                                 ),

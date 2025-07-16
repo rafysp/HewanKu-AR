@@ -1,0 +1,74 @@
+# Black Box Test Configuration
+
+# Test execution timeout (in seconds)
+timeout: 300
+
+# Test environment settings
+environment:
+  flutter_test: true
+  integration_test: false
+
+# Coverage settings
+coverage:
+  enabled: true
+  exclude_files:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/generated/**"
+
+# Test categories
+test_categories:
+  - name: "page_tests"
+    pattern: "test/black_box_tests/pages/**/*_test.dart"
+    description: "Individual page functionality tests"
+  
+  - name: "integration_tests"
+    pattern: "test/black_box_tests/integration/**/*_test.dart"
+    description: "End-to-end integration tests"
+  
+  - name: "all_tests"
+    pattern: "test/black_box_tests/**/*_test.dart"
+    description: "All black box tests"
+
+# Test execution order
+execution_order:
+  1. "helpers/test_helpers.dart"
+  2. "pages/home/home_page_black_box_test.dart"
+  3. "pages/animals/animals_page_black_box_test.dart"
+  4. "pages/quiz/quiz_black_box_test.dart"
+  5. "pages/camera/camera_page_black_box_test.dart"
+  6. "pages/score_tracking/score_tracking_black_box_test.dart"
+  7. "integration/app_integration_black_box_test.dart"
+
+# Test data configuration
+test_data:
+  sample_animals:
+    - name: "Cat"
+      habitat: "Domestic"
+      sound: "Meow"
+    - name: "Dog"
+      habitat: "Domestic"
+      sound: "Bark"
+    - name: "Bird"
+      habitat: "Trees"
+      sound: "Chirp"
+
+# Mock configurations
+mocks:
+  camera_permission: true
+  network_connection: true
+  ar_detection: enabled
+  audio_playback: enabled
+
+# Performance thresholds
+performance:
+  max_render_time_ms: 16
+  max_test_duration_s: 30
+  memory_limit_mb: 512
+
+# Reporting
+reporting:
+  format: "json"
+  output_file: "test_results/black_box_test_results.json"
+  include_coverage: true
+  include_screenshots: false

@@ -72,14 +72,16 @@ class DragAndDropQuizController extends GetxController {
     score.value = 0;
     isQuizCompleted.value = false;
 
-    print('🎯 Habitat quiz session initialized: ${totalQuestions.value} questions');
+    print(
+      '🎯 Habitat quiz session initialized: ${totalQuestions.value} questions',
+    );
   }
 
   // MENGGUNAKAN FACTORY METHOD DARI HABITATMODEL
   void loadHabitats() {
     // Gunakan factory method untuk 3 habitat sederhana
     habitats.assignAll(HabitatModel.createSimpleHabitats());
-    
+
     // Validate semua habitat
     for (var habitat in habitats) {
       if (!habitat.isValidHabitat()) {
@@ -94,42 +96,44 @@ class DragAndDropQuizController extends GetxController {
   void loadAllAnimals() {
     // Gunakan factory method untuk create default animals
     _allAnimals.assignAll(AnimalModel.createDefaultAnimals());
-    
+
     // Validate semua hewan
     for (var animal in _allAnimals) {
       if (!animal.isValidAnimal()) {
         print('⚠️ Invalid animal: ${animal.name}');
       }
     }
-    
+
     // Print statistics menggunakan method dari model
     printAnimalStatistics();
   }
 
   void printAnimalStatistics() {
     print('\n=== STATISTIK HEWAN DENGAN MODEL BARU ===');
-    
+
     // Distribusi per habitat
     for (var habitat in habitats) {
       var animalsInHabitat = AnimalModel.getAnimalsByHabitat(habitat.name);
-      print('${habitat.emoji} ${habitat.name}: ${animalsInHabitat.length} hewan');
+      print(
+        '${habitat.emoji} ${habitat.name}: ${animalsInHabitat.length} hewan',
+      );
       for (var animal in animalsInHabitat) {
         print('  - ${animal.name} (Level ${animal.getDifficultyLevel()})');
       }
     }
-    
+
     // Distribusi per difficulty
     print('\n=== DISTRIBUSI DIFFICULTY ===');
     for (int i = 1; i <= 4; i++) {
       var animalsAtLevel = AnimalModel.getAnimalsByDifficulty(i);
       print('Level $i: ${animalsAtLevel.length} hewan');
     }
-    
+
     // Special needs suitability
     var specialNeedsAnimals = AnimalModel.getAnimalsForSpecialNeeds();
     print('\n=== COCOK UNTUK ANAK BERKEBUTUHAN KHUSUS ===');
     print('${specialNeedsAnimals.length} dari ${_allAnimals.length} hewan');
-    
+
     // Accessibility scores
     print('\n=== ACCESSIBILITY SCORES ===');
     var scores = _allAnimals.map((a) => a.getAccessibilityScore()).toList();
@@ -140,31 +144,38 @@ class DragAndDropQuizController extends GetxController {
   void shuffleAndSelectAnimals() {
     // Untuk anak berkebutuhan khusus, prioritaskan hewan yang suitable
     List<AnimalModel> suitableAnimals = AnimalModel.getAnimalsForSpecialNeeds();
-    
+
     // Jika hewan suitable tidak cukup, tambahkan dari yang lain
     if (suitableAnimals.length < totalQuestionsToShow) {
-      var remaining = _allAnimals.where((a) => !suitableAnimals.contains(a)).toList();
+      var remaining =
+          _allAnimals.where((a) => !suitableAnimals.contains(a)).toList();
       remaining.shuffle();
-      suitableAnimals.addAll(remaining.take(totalQuestionsToShow - suitableAnimals.length));
+      suitableAnimals.addAll(
+        remaining.take(totalQuestionsToShow - suitableAnimals.length),
+      );
     }
-    
+
     // Shuffle dan ambil sesuai jumlah soal
     suitableAnimals.shuffle();
     animals.assignAll(suitableAnimals.take(totalQuestionsToShow).toList());
 
-    print('🎲 Quiz dimulai dengan ${animals.length} soal dari ${_allAnimals.length} hewan tersedia');
+    print(
+      '🎲 Quiz dimulai dengan ${animals.length} soal dari ${_allAnimals.length} hewan tersedia',
+    );
     print('📝 Hewan yang terpilih: ${animals.map((a) => a.name).join(', ')}');
-    
+
     // Print details setiap hewan terpilih
     for (var animal in animals) {
-      print('  - ${animal.name}: ${animal.habitatId} (Difficulty: ${animal.getDifficultyLevel()})');
+      print(
+        '  - ${animal.name}: ${animal.habitatId} (Difficulty: ${animal.getDifficultyLevel()})',
+      );
     }
   }
 
   // SISTEM HINT MENGGUNAKAN METHOD DARI ANIMALMODEL
   String getCurrentHint() {
     if (currentQuestion == null) return '';
-    
+
     // Gunakan method getHintByLevel dari AnimalModel
     return currentQuestion!.getHintByLevel(currentHintLevel.value);
   }
@@ -173,7 +184,7 @@ class DragAndDropQuizController extends GetxController {
     if (currentHintLevel.value < 3) {
       currentHintLevel.value++;
       showHint.value = true;
-      
+
       // Auto hide hint after 5 seconds
       Future.delayed(Duration(seconds: 5), () {
         showHint.value = false;
@@ -192,7 +203,7 @@ class DragAndDropQuizController extends GetxController {
       (h) => h.name == habitatId,
       orElse: () => habitats.first,
     );
-    
+
     return habitat.simpleRule ?? 'Aturan tidak tersedia';
   }
 
@@ -205,7 +216,7 @@ class DragAndDropQuizController extends GetxController {
 
   // Method for compatibility with HabitatDragQuizPage
   String getQuizTitle() {
-    return 'Kuis Habitat Hewan - Mode Sederhana';
+    return 'Kuis Habitat Hewan';
   }
 
   // Method to handle drag and drop for single animal mode
@@ -222,7 +233,9 @@ class DragAndDropQuizController extends GetxController {
       correctAnswers.value++;
     }
 
-    print('🎯 Answer: ${isCorrect ? "Correct" : "Incorrect"} - Score: ${correctAnswers.value}/${totalQuestions.value}');
+    print(
+      '🎯 Answer: ${isCorrect ? "Correct" : "Incorrect"} - Score: ${correctAnswers.value}/${totalQuestions.value}',
+    );
 
     // Wait for dragging animation
     Future.delayed(Duration(milliseconds: 500), () {
@@ -238,9 +251,10 @@ class DragAndDropQuizController extends GetxController {
     String animalName = currentQuestion!.name;
     String correctHabitat = currentQuestion!.habitatId;
 
-    String message = isCorrect
-        ? "🎉 Pintar sekali! $animalName memang suka tinggal di $correctHabitat. Kamu hebat!"
-        : "🤔 Hmm, belum tepat nih. Ternyata $animalName lebih suka tinggal di $correctHabitat, bukan di $selectedHabitat. Ayo coba lagi!";
+    String message =
+        isCorrect
+            ? "🎉 Pintar sekali! $animalName memang suka tinggal di $correctHabitat. Kamu hebat!"
+            : "🤔 Hmm, belum tepat nih. Ternyata $animalName lebih suka tinggal di $correctHabitat, bukan di $selectedHabitat. Ayo coba lagi!";
 
     // Gunakan method dari HabitatModel untuk mendapatkan habitat
     HabitatModel? correctHabitatModel = habitats.firstWhere(
@@ -248,7 +262,8 @@ class DragAndDropQuizController extends GetxController {
       orElse: () => habitats.first,
     );
 
-    String description = correctHabitatModel.description ?? 'Deskripsi tidak tersedia';
+    String description =
+        correctHabitatModel.description ?? 'Deskripsi tidak tersedia';
     String rule = correctHabitatModel.simpleRule ?? 'Aturan tidak tersedia';
 
     Get.dialog(
@@ -257,9 +272,10 @@ class DragAndDropQuizController extends GetxController {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: isCorrect
-                ? Color.fromRGBO(232, 245, 233, 1.0)
-                : Color.fromRGBO(255, 235, 238, 1.0),
+            color:
+                isCorrect
+                    ? Color.fromRGBO(232, 245, 233, 1.0)
+                    : Color.fromRGBO(255, 235, 238, 1.0),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
@@ -268,19 +284,17 @@ class DragAndDropQuizController extends GetxController {
               // Heading with emoji
               Row(
                 children: [
-                  Text(
-                    isCorrect ? "✅ " : "❌ ",
-                    style: TextStyle(fontSize: 30),
-                  ),
+                  Text(isCorrect ? "✅ " : "❌ ", style: TextStyle(fontSize: 30)),
                   Expanded(
                     child: Text(
                       isCorrect ? "Hebat!" : "Coba lagi",
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: isCorrect
-                            ? Color.fromRGBO(46, 125, 50, 1.0)
-                            : Color.fromRGBO(183, 28, 28, 1.0),
+                        color:
+                            isCorrect
+                                ? Color.fromRGBO(46, 125, 50, 1.0)
+                                : Color.fromRGBO(183, 28, 28, 1.0),
                       ),
                     ),
                   ),
@@ -326,7 +340,8 @@ class DragAndDropQuizController extends GetxController {
               const SizedBox(height: 16),
 
               // Animal characteristics (dari model baru)
-              if (currentQuestion!.characteristics != null && currentQuestion!.characteristics!.isNotEmpty)
+              if (currentQuestion!.characteristics != null &&
+                  currentQuestion!.characteristics!.isNotEmpty)
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -347,23 +362,29 @@ class DragAndDropQuizController extends GetxController {
                       Wrap(
                         spacing: 8,
                         runSpacing: 4,
-                        children: currentQuestion!.characteristics!.map((char) {
-                          return Container(
-                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: currentQuestion!.getHabitatColor().withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              char,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: currentQuestion!.getHabitatColor(),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                        children:
+                            currentQuestion!.characteristics!.map((char) {
+                              return Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: currentQuestion!
+                                      .getHabitatColor()
+                                      .withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  char,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: currentQuestion!.getHabitatColor(),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
                       ),
                     ],
                   ),
@@ -427,9 +448,10 @@ class DragAndDropQuizController extends GetxController {
                   color: Color.fromRGBO(255, 255, 255, 0.7),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isCorrect
-                        ? Color.fromRGBO(76, 175, 80, 0.7)
-                        : Color.fromRGBO(244, 67, 54, 0.7),
+                    color:
+                        isCorrect
+                            ? Color.fromRGBO(76, 175, 80, 0.7)
+                            : Color.fromRGBO(244, 67, 54, 0.7),
                     width: 2,
                   ),
                 ),
@@ -446,7 +468,8 @@ class DragAndDropQuizController extends GetxController {
               const SizedBox(height: 12),
 
               // Fun fact dari model baru
-              if (currentQuestion!.funFact != null && currentQuestion!.funFact!.isNotEmpty)
+              if (currentQuestion!.funFact != null &&
+                  currentQuestion!.funFact!.isNotEmpty)
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -514,9 +537,10 @@ class DragAndDropQuizController extends GetxController {
                   });
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isCorrect
-                      ? Color.fromRGBO(76, 175, 80, 1.0)
-                      : Color.fromRGBO(33, 150, 243, 1.0),
+                  backgroundColor:
+                      isCorrect
+                          ? Color.fromRGBO(76, 175, 80, 1.0)
+                          : Color.fromRGBO(33, 150, 243, 1.0),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 12,
@@ -586,7 +610,9 @@ class DragAndDropQuizController extends GetxController {
         duration: durationSeconds,
       );
 
-      print('📊 Habitat quiz score saved: ${correctAnswers.value}/${totalQuestions.value} in ${durationSeconds}s');
+      print(
+        '📊 Habitat quiz score saved: ${correctAnswers.value}/${totalQuestions.value} in ${durationSeconds}s',
+      );
     } catch (e) {
       print('❌ Error saving habitat quiz score: $e');
     }
@@ -680,7 +706,7 @@ class DragAndDropQuizController extends GetxController {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              
+
               // Enhanced info dengan data dari model
               Container(
                 padding: const EdgeInsets.all(16),
@@ -688,11 +714,10 @@ class DragAndDropQuizController extends GetxController {
                   color: Colors.white.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(15),
                 ),
-                
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Skor dengan bintang
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -702,7 +727,10 @@ class DragAndDropQuizController extends GetxController {
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Icon(
                         Icons.star,
-                        color: index < correctAnswers.value ? Colors.amber : Colors.grey[300],
+                        color:
+                            index < correctAnswers.value
+                                ? Colors.amber
+                                : Colors.grey[300],
                         size: 30,
                       ),
                     );
@@ -719,7 +747,7 @@ class DragAndDropQuizController extends GetxController {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Show percentage
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
