@@ -38,7 +38,7 @@ void main() {
         );
 
         // Act & Assert
-        expect(find.text('Camera Preview'), findsOneWidget);
+        expect(find.text('Pratinjau Kamera'), findsOneWidget);
       });
 
       testWidgets('should display camera controls', (

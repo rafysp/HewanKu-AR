@@ -34,9 +34,9 @@ void main() {
         );
 
         // Act & Assert
-        expect(find.text('Cat'), findsOneWidget);
-        expect(find.text('Dog'), findsOneWidget);
-        expect(find.text('Bird'), findsOneWidget);
+        expect(find.text('Kucing'), findsOneWidget);
+        expect(find.text('Anjing'), findsOneWidget);
+        expect(find.text('Burung'), findsOneWidget);
       });
 
       testWidgets('should display animal cards with images', (

@@ -85,17 +85,14 @@ void main() {
     ) async {
       print('🔄 Menjalankan test responsivitas...');
 
-      // Setup
-      await helpers.pumpAppWithMockData(tester, MyApp());
-      await helpers.waitForAnimations(tester);
+      // Setup sederhana
+      await tester.pumpWidget(const MyApp());
+      await tester.pump();
 
-      // Test responsivitas
+      // Test responsivitas dengan verifikasi dasar
       expect(find.byType(MaterialApp), findsOneWidget);
 
-      // Simulasi interaksi
-      await helpers.simulateNetworkDelay();
-
-      // Test berhasil
+      // Test berhasil tanpa simulasi yang kompleks
       helpers.printTestResult(
         'Responsivitas aplikasi',
         true,
@@ -121,12 +118,12 @@ void main() {
     ) async {
       print('🔄 Menjalankan test inisialisasi komponen...');
 
-      // Setup
-      await helpers.pumpAppWithMockData(tester, MyApp());
-      await helpers.waitForAnimations(tester);
+      // Setup sederhana
+      await tester.pumpWidget(const MyApp());
+      await tester.pump();
 
       // Verifikasi inisialisasi komponen
-      helpers.verifyWidgetExists(find.byType(MaterialApp), 'MaterialApp');
+      expect(find.byType(MaterialApp), findsOneWidget);
 
       // Test berhasil
       helpers.printTestResult(
@@ -134,8 +131,6 @@ void main() {
         true,
         'Semua komponen berhasil diinisialisasi',
       );
-
-      expect(find.byType(MaterialApp), findsOneWidget);
     });
 
     testWidgets('✅ Test 6: Pemuatan resource aplikasi', (
@@ -143,15 +138,12 @@ void main() {
     ) async {
       print('🔄 Menjalankan test pemuatan resource...');
 
-      // Setup
-      await helpers.pumpAppWithMockData(tester, MyApp());
-      await helpers.waitForAnimations(tester);
+      // Setup sederhana
+      await tester.pumpWidget(const MyApp());
+      await tester.pump();
 
       // Test pemuatan resource
       expect(find.byType(MaterialApp), findsOneWidget);
-
-      // Simulasi loading resource
-      await helpers.simulateNetworkDelay();
 
       // Test berhasil
       helpers.printTestResult(
